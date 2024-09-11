@@ -376,23 +376,6 @@ export function getFarmsProgramId(cluster: string) {
   return new PublicKey("FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr");
 }
 
-export function endpointFromCluster(cluster: string | undefined): string {
-  switch (cluster) {
-    case "mainnet":
-      return "https://hubble-dedi.rpcpool.com/98e7842fbc63114f80adf2810a80";
-    case "devnet":
-      return "https://hubblep-develope-bbc5.devnet.rpcpool.com/5849b35e-9963-46d9-b1d9-3c09dd4f6bdd";
-    case "localnet":
-      return "http://127.0.0.1:8899";
-  }
-
-  if (cluster) {
-    return cluster;
-  }
-
-  return "err";
-}
-
 export function pubkeyFromFile(filepath: string): PublicKey {
   const fileContents = fs.readFileSync(filepath, "utf8");
   const privateArray = fileContents
