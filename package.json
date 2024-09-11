@@ -1,5 +1,5 @@
 {
-  "name": "@hubbleprotocol/farms-sdk",
+  "name": "@kamino-finance/farms-sdk",
   "description": "Farms SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,23 +10,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hubbleprotocol/farms.git"
+    "url": "git+https://github.com/kamino-finance/farms-sdk.git"
   },
   "keywords": [
-    "hubble",
-    "hubbleprotocol",
+    "kamino",
+    "kamino-finance",
     "common",
     "sdk",
     "client",
     "kamino",
     "farms"
   ],
-  "author": "Hubble Protocol",
+  "author": "Kamino Finance",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/hubbleprotocol/farms/issues"
+    "url": "https://github.com/kamino-finance/farms/issues"
   },
-  "homepage": "https://github.com/hubbleprotocol/farms/tree/master/farms-sdk",
+  "homepage": "https://github.com/kamino-finance/farms-sdk",
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
     "@coral-xyz/borsh": "^0.28.0",
