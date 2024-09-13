@@ -42,6 +42,10 @@ import { withdrawFarmRewardCommand } from "./commands/withdraw_farm_reward_comma
 import { downloadAllFarmConfigs } from "./commands/download_all_farm_configs";
 import { upsertAllFarmConfigsCommand } from "./commands/upsert_all_farm_configs";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  topUpFarmForRewardForStrategy,
+  updateFarmRpsForRewardCommand,
+} from "./commands/example_update_rps_and_top_up";
 
 const BaseMintOptions = ["base-mint", "base-mint-file", "init-base-mint"];
 export type BaseMintOption = (typeof BaseMintOptions)[number];
@@ -503,6 +507,32 @@ async function main() {
         );
       },
     );
+
+  commands
+    .command("update-farm-rps-for-reward")
+    .requiredOption(`--farm <string>`, "The farm")
+    .requiredOption(`--reward <string>`, "The reward mint")
+    .requiredOption(`--rps <string>`, "The rewards per second to set")
+    .action(async ({ farm, reward, rps }) => {
+      await updateFarmRpsForRewardCommand(
+        new PublicKey(reward),
+        new PublicKey(farm),
+        parseInt(rps),
+      );
+    });
+
+  commands
+    .command("top-up-farm-for-reward")
+    .requiredOption(`--farm <string>`, "The farm")
+    .requiredOption(`--reward <string>`, "The reward mint")
+    .requiredOption(`--amount <string>`, "The amount to top up")
+    .action(async ({ farm, reward, amount }) => {
+      await topUpFarmForRewardForStrategy(
+        new PublicKey(reward),
+        new PublicKey(farm),
+        new Decimal(amount),
+      );
+    });
 
   commands
     .command("create-mint")

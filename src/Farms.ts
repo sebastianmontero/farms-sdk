@@ -56,6 +56,7 @@ import {
   LockingMode,
   RewardType,
   RewardInfo,
+  FarmConfigOption,
 } from "./rpc_client/types/index";
 import { FarmAndKey, UserAndKey } from "./models";
 import { PROGRAM_ID } from "./rpc_client/programId";
@@ -69,6 +70,7 @@ import {
   Position,
   PubkeyHashMap,
   PublicKeySet,
+  U64_MAX,
 } from "@kamino-finance/klend-sdk";
 import { ReserveFarmKind } from "@kamino-finance/klend-sdk/dist/idl_codegen/types";
 import {
@@ -2476,6 +2478,107 @@ export class Farms {
     }
 
     return userToPointsBreakdown;
+  }
+
+  async updateFarmRpsForRewardIx(
+    payer: PublicKey,
+    rewardMint: PublicKey,
+    farm: PublicKey,
+    rewardsPerSecond: number,
+  ): Promise<TransactionInstruction> {
+    const farmsClient = new Farms(this._connection);
+
+    const farmState = await FarmState.fetch(
+      this._connection,
+      farm,
+      farmsClient.getProgramID(),
+    );
+
+    if (!farmState) {
+      throw new Error("Farm not found");
+    }
+
+    let rewardIndex: number = 0;
+
+    const rewardInfo = farmState.rewardInfos.find((info, index) => {
+      rewardIndex = index;
+      return info.token.mint.equals(rewardMint);
+    });
+
+    if (!rewardInfo) {
+      throw new Error("Reward not found in farm");
+    }
+
+    const currentRewardScheduleCruve = rewardInfo.rewardScheduleCurve;
+
+    let newRewardScheduleCurve: RewardCurvePoint[] = [];
+
+    for (let point of currentRewardScheduleCruve.points) {
+      if (
+        point.tsStart.toString() === U64_MAX &&
+        point.rewardPerTimeUnit.toNumber() === 0
+      ) {
+        newRewardScheduleCurve.push({
+          startTs: Date.now(),
+          rps: rewardsPerSecond,
+        });
+        break;
+      }
+      {
+        newRewardScheduleCurve.push({
+          startTs: new Decimal(point.tsStart.toString()).toNumber(),
+          rps: new Decimal(point.rewardPerTimeUnit.toString()).toNumber(),
+        });
+      }
+    }
+
+    return await this.updateFarmConfigIx(
+      payer,
+      farm,
+      rewardMint,
+      FarmConfigOption.fromDecoded({
+        [FarmConfigOption.UpdateRewardScheduleCurvePoints.kind]: "",
+      }),
+      newRewardScheduleCurve,
+      rewardIndex,
+    );
+  }
+
+  async topUpFarmForRewardIx(
+    payer: PublicKey,
+    rewardMint: PublicKey,
+    farm: PublicKey,
+    amountToTopUp: Decimal,
+  ): Promise<TransactionInstruction> {
+    const farmsClient = new Farms(this._connection);
+
+    const farmState = await FarmState.fetch(
+      this._connection,
+      farm,
+      farmsClient.getProgramID(),
+    );
+
+    if (!farmState) {
+      throw new Error("Farm not found");
+    }
+
+    let rewardIndex: number = 0;
+
+    const rewardInfo = farmState.rewardInfos.find((info, index) => {
+      rewardIndex = index;
+      return info.token.mint.equals(rewardMint);
+    });
+
+    if (!rewardInfo) {
+      throw new Error("Reward not found in farm");
+    }
+
+    return await this.addRewardAmountToFarmIx(
+      payer,
+      farm,
+      rewardMint,
+      amountToTopUp,
+    );
   }
 
   async processTxn(
