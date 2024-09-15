@@ -1762,7 +1762,7 @@ export class Farms {
     farm: PublicKey,
     mint: PublicKey,
     mode: FarmConfigOptionKind,
-    value: number | PublicKey | number[] | RewardCurvePoint[],
+    value: number | PublicKey | number[] | RewardCurvePoint[] | BN,
     rewardIndexOverride: number = -1,
     scopePricesOverride: PublicKey = PROGRAM_ID,
     newFarm: boolean = false,

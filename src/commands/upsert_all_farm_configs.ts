@@ -30,6 +30,7 @@ import fs from "fs";
 import clc from "cli-color";
 import { U64_MAX } from "@kamino-finance/klend-sdk";
 import { RpsDecimals } from "../rpc_client/types/FarmConfigOption";
+import { BN } from "@coral-xyz/anchor";
 
 const microLamport = 10 ** 6;
 const computeUnits = 200_000;
@@ -875,11 +876,10 @@ async function setScopeOraclePriceIdIxIfNecessary(
 ): Promise<TransactionInstruction[]> {
   const currentScopeOraclePriceId = new Decimal(
     farmState.scopeOraclePriceId.toString(),
-  ).toNumber();
+  );
 
   if (
-    currentScopeOraclePriceId !=
-    new Decimal(farmConfig.scopePriceOracleId).toNumber()
+    !currentScopeOraclePriceId.eq(new Decimal(farmConfig.scopePriceOracleId))
   ) {
     const valueStringBefore =
       "scopeOraclePriceId before".padEnd(40) +
@@ -903,7 +903,7 @@ async function setScopeOraclePriceIdIxIfNecessary(
       FarmConfigOption.fromDecoded({
         [FarmConfigOption.ScopeOraclePriceId.kind]: "",
       }),
-      new Decimal(farmConfig.scopePriceOracleId).toNumber(),
+      new BN(farmConfig.scopePriceOracleId),
       0,
     );
 

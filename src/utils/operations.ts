@@ -9,6 +9,7 @@ import { TransactionInstruction } from "@solana/web3.js";
 import { PROGRAM_ID } from "../rpc_client/programId";
 import { FarmConfigOption } from "../rpc_client/types";
 import { RewardCurvePoint } from "../Farms";
+import { BN } from "@coral-xyz/anchor";
 
 export function initializeGlobalConfig(
   globalAdmin: PublicKey,
@@ -206,7 +207,7 @@ export function updateFarmConfig(
   scopePrices: PublicKey,
   rewardIndex: number,
   mode: Types.FarmConfigOptionKind,
-  value: number | PublicKey | number[] | RewardCurvePoint[],
+  value: number | PublicKey | number[] | RewardCurvePoint[] | BN,
 ): TransactionInstruction {
   let accounts: Instructions.UpdateFarmConfigAccounts = {
     signer: farmAdmin,
@@ -216,7 +217,6 @@ export function updateFarmConfig(
 
   let data: Uint8Array = new Uint8Array();
   let buffer: Buffer;
-
   switch (mode.discriminator) {
     case FarmConfigOption.LockingStartTimestamp.discriminator:
     case FarmConfigOption.LockingDuration.discriminator:
@@ -228,15 +228,15 @@ export function updateFarmConfig(
       buffer.writeBigUint64LE(BigInt(value as number), 0);
       data = Uint8Array.from(buffer);
       break;
+    case FarmConfigOption.ScopeOraclePriceId.discriminator: // BN arg
+      buffer = Buffer.alloc(8);
+      buffer.writeBigUint64LE(BigInt((value as BN).toString()), 0);
+      data = Uint8Array.from(buffer);
+      break;
     case FarmConfigOption.DepositWarmupPeriod.discriminator:
     case FarmConfigOption.WithdrawCooldownPeriod.discriminator:
       buffer = Buffer.alloc(4);
       buffer.writeInt32LE(value as number, 0);
-      data = Uint8Array.from(buffer);
-      break;
-    case FarmConfigOption.ScopeOraclePriceId.discriminator:
-      buffer = Buffer.alloc(2);
-      buffer.writeUInt16LE(value as number, 0);
       data = Uint8Array.from(buffer);
       break;
     case FarmConfigOption.UpdateStrategyId.discriminator:
