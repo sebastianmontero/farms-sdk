@@ -1635,11 +1635,11 @@ export function calculateDaysBalanceRemaining(
   for (const [index, _curvePoint] of rewardCurve.entries()) {
     const rps = rewardCurve[index].rps / 10 ** rpsDecimalsCurrent;
     if (index == rewardCurve.length - 1) {
-      return remainingLamports / rps / 86400;
+      return numDays + remainingLamports / rps / 86400;
     }
     if (remainingLamports > 0) {
       if (
-        ts > rewardCurve[index].startTs &&
+        ts >= rewardCurve[index].startTs &&
         ts < rewardCurve[index + 1].startTs
       ) {
         const secondsWithCurrentRps = remainingLamports / rps;
@@ -1650,6 +1650,8 @@ export function calculateDaysBalanceRemaining(
           const actualSecondsAtCurrentRps = rewardCurve[index + 1].startTs - ts;
           numDays += actualSecondsAtCurrentRps / 86400;
           remainingLamports -= actualSecondsAtCurrentRps * rps;
+
+          ts = rewardCurve[index + 1].startTs; // advance time to next curve point for estimation
         }
       }
     }
