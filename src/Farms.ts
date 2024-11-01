@@ -83,6 +83,7 @@ import {
   Web3Client,
 } from "./utils/sendTransactionsUtils";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { batchFetch } from "./utils/batch";
 
 export const farmsId = new PublicKey(
   "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr",
@@ -316,7 +317,9 @@ export class Farms {
   async getAllFarmStatesByPubkeys(keys: PublicKey[]): Promise<FarmAndKey[]> {
     const farmAndKeys: FarmAndKey[] = [];
 
-    const farmStates = await this.fetchMultipleFarmStatesWithCheckedSize(keys);
+    const farmStates = await batchFetch(keys, (chunk) =>
+      this.fetchMultipleFarmStatesWithCheckedSize(chunk),
+    );
 
     farmStates.forEach((farmState, index) => {
       if (farmState) {
@@ -2625,7 +2628,9 @@ export class Farms {
     return "";
   }
 
-  async fetchMultipleFarmStatesWithCheckedSize(keys: PublicKey[]) {
+  async fetchMultipleFarmStatesWithCheckedSize(
+    keys: PublicKey[],
+  ): Promise<(FarmState | null)[]> {
     // Custom deserialization to avoid fetching non-serializable accounts
     const farmStateSize = FarmState.layout.span + 8;
     const infos = await this._connection.getMultipleAccountsInfo(keys);
