@@ -317,7 +317,7 @@ export async function mapAnchorError<T>(fn: Promise<T>): Promise<T> {
     );
     if (isCustomProgramError) {
       let error: any;
-      if (!![Number(errorCode)]) {
+      if (!isNaN(Number(errorCode))) {
         error = FarmsErrors.fromCode(Number(errorCode));
         throw new Error(error);
       } else if (Number(errorCode) >= 6000 && Number(errorCode) <= 7000) {
