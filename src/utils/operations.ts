@@ -105,6 +105,28 @@ export function initializeFarm(
   return ix;
 }
 
+export function initializeFarmDelegated(
+  globalConfig: PublicKey,
+  farmAdmin: PublicKey,
+  farmState: PublicKey,
+  farmVaultAuthority: PublicKey,
+  farmDelegate: PublicKey,
+): TransactionInstruction {
+  let accounts: Instructions.InitializeFarmDelegatedAccounts = {
+    farmAdmin,
+    farmState: farmState,
+    globalConfig: globalConfig,
+    farmVaultsAuthority: farmVaultAuthority,
+    systemProgram: anchor.web3.SystemProgram.programId,
+    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    farmDelegate,
+  };
+
+  let ix = Instructions.initializeFarmDelegated(accounts);
+
+  return ix;
+}
+
 export function initializeReward(
   globalConfig: PublicKey,
   treasuryVaultAuthority: PublicKey,
@@ -284,11 +306,13 @@ export function initializeUser(
   farmState: PublicKey,
   owner: PublicKey,
   userState: PublicKey,
+  authority: PublicKey = owner,
+  delegatee: PublicKey = owner,
 ): TransactionInstruction {
   let accounts: Instructions.InitializeUserAccounts = {
-    authority: owner,
-    payer: owner,
-    delegatee: owner,
+    authority,
+    payer: authority,
+    delegatee,
     owner,
     userState: userState,
     farmState: farmState,

@@ -911,10 +911,18 @@ export class Farms {
   async createNewUserIx(
     user: PublicKey,
     farm: PublicKey,
+    authority: PublicKey = user,
+    delegatee: PublicKey = user,
   ): Promise<TransactionInstruction> {
     const userState = getUserStatePDA(this._farmsProgramId, farm, user);
 
-    const ix = farmOperations.initializeUser(farm, user, userState);
+    const ix = farmOperations.initializeUser(
+      farm,
+      user,
+      userState,
+      authority,
+      delegatee,
+    );
 
     return ix;
   }
@@ -924,8 +932,15 @@ export class Farms {
     farm: PublicKey,
     priorityFeeMultiplier: number,
     web3Client?: Web3Client,
+    authority: Keypair = user,
+    delegatee: Keypair = user,
   ): Promise<TransactionSignature> {
-    const ix = await this.createNewUserIx(user.publicKey, farm);
+    const ix = await this.createNewUserIx(
+      user.publicKey,
+      farm,
+      authority.publicKey,
+      delegatee.publicKey,
+    );
 
     let sig = await this.executeTransaction(
       [ix],
@@ -1492,6 +1507,40 @@ export class Farms {
     return ixs;
   }
 
+  async createFarmDelegatedIx(
+    admin: PublicKey,
+    farm: Keypair,
+    globalConfig: PublicKey,
+    farmDelegate: PublicKey,
+  ): Promise<TransactionInstruction[]> {
+    const farmVaultAuthority = getFarmAuthorityPDA(
+      this._farmsProgramId,
+      farm.publicKey,
+    );
+
+    let ixs: TransactionInstruction[] = [];
+    ixs.push(
+      await createKeypairRentExemptIx(
+        this._provider.connection,
+        admin,
+        farm,
+        SIZE_FARM_STATE,
+        this._farmsProgramId,
+      ),
+    );
+
+    ixs.push(
+      farmOperations.initializeFarmDelegated(
+        globalConfig,
+        admin,
+        farm.publicKey,
+        farmVaultAuthority,
+        farmDelegate,
+      ),
+    );
+    return ixs;
+  }
+
   async createFarm(
     admin: Keypair,
     globalConfig: PublicKey,
@@ -1519,6 +1568,35 @@ export class Farms {
       priorityFeeMultiplier,
       log,
       [farm],
+      web3Client,
+    );
+  }
+
+  async createFarmDelegated(
+    admin: Keypair,
+    globalConfig: PublicKey,
+    farm: Keypair,
+    farmDelegate: Keypair,
+    mode: string = "execute",
+    priorityFeeMultiplier: number,
+    web3Client?: Web3Client,
+  ) {
+    let createFarmDelegateIx = await this.createFarmDelegatedIx(
+      admin.publicKey,
+      farm,
+      globalConfig,
+      farmDelegate.publicKey,
+    );
+
+    const log = "Initialize Delegated Farm: " + farm.toString();
+
+    return this.processTxn(
+      admin,
+      createFarmDelegateIx,
+      mode,
+      priorityFeeMultiplier,
+      log,
+      [farm, farmDelegate],
       web3Client,
     );
   }

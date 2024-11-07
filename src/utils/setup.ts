@@ -245,14 +245,13 @@ export async function createUser(
   farmAccounts: FarmAccounts,
   solAirdropAmount: Decimal,
   tokenAirdropAmount: Decimal,
-  rewardAirdropAmounts: Array<Decimal>,
   owner?: Keypair,
 ): Promise<UserAccounts> {
   if (!owner) {
     owner = new anchor.web3.Keypair();
   }
 
-  const userState = await getUserStatePDA(
+  const userState = getUserStatePDA(
     env.program.programId,
     farmAccounts.farmState.publicKey,
     owner.publicKey,
@@ -320,15 +319,11 @@ export async function setUpUser(
   const solAirdropAmount = new Decimal(5);
   const tokenAirdropAmount = new Decimal(2000000);
 
-  let rewardAirdropAmounts = new Array<Decimal>(rewardTokens.length);
-  rewardAirdropAmounts.fill(new Decimal(20000000));
-
   const userAccounts = await createUser(
     env,
     farmAccounts,
     solAirdropAmount,
     tokenAirdropAmount,
-    rewardAirdropAmounts,
     owner,
   );
 
@@ -430,12 +425,12 @@ export async function createFarmAccounts(
 ): Promise<FarmAccounts> {
   const farmState: Keypair = Keypair.generate();
 
-  const farmVault = await getFarmVaultPDA(
+  const farmVault = getFarmVaultPDA(
     env.program.programId,
     farmState.publicKey,
     tokenMint,
   );
-  const farmVaultAuthority = await getFarmAuthorityPDA(
+  const farmVaultAuthority = getFarmAuthorityPDA(
     env.program.programId,
     farmState.publicKey,
   );
@@ -448,6 +443,35 @@ export async function createFarmAccounts(
     farmState: farmState,
     tokenMint,
     farmVault,
+    rewardVaults,
+    farmVaultAuthority,
+    rewardMints: rewardTokens,
+    adminRewardAtas,
+  };
+
+  return farmAccounts;
+}
+
+export function createDelegatedFarmAccounts(
+  env: Env,
+  rewardTokens: Array<PublicKey>,
+  farmAdmin: Keypair,
+): FarmAccounts {
+  const farmState: Keypair = Keypair.generate();
+
+  const farmVaultAuthority = getFarmAuthorityPDA(
+    env.program.programId,
+    farmState.publicKey,
+  );
+
+  let rewardVaults = new Array<PublicKey>();
+  let adminRewardAtas = new Array<PublicKey>();
+
+  let farmAccounts: FarmAccounts = {
+    farmAdmin: farmAdmin,
+    farmState: farmState,
+    tokenMint: PublicKey.default,
+    farmVault: PublicKey.default,
     rewardVaults,
     farmVaultAuthority,
     rewardMints: rewardTokens,
@@ -524,6 +548,35 @@ export async function setUpFarm(
     mode,
     priorityFeeMultiplier,
     env.web3Client,
+  );
+
+  return farmAccounts;
+}
+
+export async function setUpFarmDelegated(
+  env: Env,
+  globalConfig: PublicKey,
+  farmAdmin: Keypair,
+  farmDelegate: Keypair,
+  mode: string,
+  priorityFeeMultiplier: number,
+): Promise<FarmAccounts> {
+  let rewardTokens = new Array<PublicKey>();
+  const farmAccounts = createDelegatedFarmAccounts(
+    env,
+    rewardTokens,
+    farmAdmin,
+  );
+
+  const farmClient = new Farms(env.provider.connection);
+
+  await farmClient.createFarmDelegated(
+    farmAccounts.farmAdmin,
+    globalConfig,
+    farmAccounts.farmState,
+    farmDelegate,
+    mode,
+    priorityFeeMultiplier,
   );
 
   return farmAccounts;

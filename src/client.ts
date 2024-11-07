@@ -16,7 +16,7 @@ import {
 } from "./utils/utils";
 import { PublicKey } from "@solana/web3.js";
 import { Farms } from "./Farms";
-import { getFarmsProgramId, mintTo, setupAta } from "./utils";
+import { getFarmsProgramId, mintTo, parseKeypairFile, setupAta } from "./utils";
 import { initializeClient } from "./commands/utils";
 import { refreshFarmCommand } from "./commands/refresh_farm";
 import { refreshKlendFarmsCommand } from "./commands/refresh_klend_farm";
@@ -46,6 +46,7 @@ import {
   topUpFarmForRewardForStrategy,
   updateFarmRpsForRewardCommand,
 } from "./commands/example_update_rps_and_top_up";
+import { initFarmDelegated } from "./commands/init_farm_delegated";
 
 const BaseMintOptions = ["base-mint", "base-mint-file", "init-base-mint"];
 export type BaseMintOption = (typeof BaseMintOptions)[number];
@@ -132,6 +133,31 @@ async function main() {
     .action(async ({ tokenMint, priorityFeeMultiplier, mode }) => {
       await initFarm(
         tokenMint,
+        mode,
+        priorityFeeMultiplier
+          ? new Decimal(priorityFeeMultiplier).toNumber()
+          : 1,
+      );
+    });
+
+  commands
+    .command("init-farm-delegated")
+    .option("--delegated-authority-path, <string>", "the delegated farm admin")
+    .option(
+      "--priority-fee-multiplier <string>",
+      "the amount of priority fees to add - (multiply 1 lamport)",
+    )
+    .option(
+      "--mode <string>",
+      "multisig - will print bs58 txn only, simulate - will print bs64 txn explorer link and simulation",
+    )
+    .action(async ({ delegatedAuthorityPath, priorityFeeMultiplier, mode }) => {
+      const delegatedAuthorityKeyPair = parseKeypairFile(
+        delegatedAuthorityPath,
+      );
+
+      await initFarmDelegated(
+        delegatedAuthorityKeyPair,
         mode,
         priorityFeeMultiplier
           ? new Decimal(priorityFeeMultiplier).toNumber()
