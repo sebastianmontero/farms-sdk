@@ -894,6 +894,7 @@ export class Farms {
         sendTransactionOptions: {
           skipPreflight: true,
           preflightCommitment: "confirmed",
+          maxRetries: 0,
         },
       });
     } else {
@@ -901,7 +902,7 @@ export class Farms {
         this._connection,
         tx,
         [signer, ...extraSigners],
-        { skipPreflight: true, commitment: "confirmed" },
+        { skipPreflight: true, commitment: "confirmed", maxRetries: 0 },
       );
     }
 
