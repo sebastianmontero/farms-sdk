@@ -533,7 +533,9 @@ export class Farms {
       farmPks[i] = userStates[i].userState.farmState;
     }
 
-    const farmStates = await this.getAllFarmStatesByPubkeys(farmPks);
+    const farmStates = await batchFetch(farmPks, (chunk) =>
+      this.getAllFarmStatesByPubkeys(chunk),
+    );
 
     if (!farmStates) {
       throw new Error("Error fetching farms");
