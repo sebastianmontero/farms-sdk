@@ -8,7 +8,7 @@
     "dist",
     "src/**/*.ts"
   ],
-  "version": "2.2.0",
+  "version": "2.3.0",
   "scripts": {
     "build": "tsc",
     "build:test": "tsc --project ./tests/tsconfig.json",
@@ -38,9 +38,9 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
     "@coral-xyz/borsh": "^0.28.0",
-    "@kamino-finance/scope-sdk": "^8.0.2",
     "@kamino-finance/klend-sdk": "^5.8.0",
     "@kamino-finance/kliquidity-sdk": "^6.4.0",
+    "@kamino-finance/scope-sdk": "^8.0.2",
     "@solana/spl-token": "^0.4.9",
     "@solana/web3.js": "^1.95.5",
     "base58-js": "1.0.5",
