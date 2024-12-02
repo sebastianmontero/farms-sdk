@@ -284,6 +284,7 @@ export function getFarmConfigType(
                     ).toNumber(),
                   };
                 }
+                return undefined;
               })
               .filter((point) => point !== undefined),
             rewardAvailable: lamportsToCollDecimal(
@@ -296,6 +297,7 @@ export function getFarmConfigType(
             rewardToTopUpDurationDays: 0,
           };
         }
+        return undefined;
       })
       .filter((rewardInfoConfig) => rewardInfoConfig !== undefined),
     pendingFarmAdmin: farmState.pendingFarmAdmin,

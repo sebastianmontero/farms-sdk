@@ -2,21 +2,16 @@
 
 import * as anchor from "@coral-xyz/anchor";
 import { Command } from "commander";
-import { getMintDecimals } from "@project-serum/serum/lib/market";
 import Decimal from "decimal.js";
 import dotenv from "dotenv";
 dotenv.config({
-  path: `.env${process.env.ENV ? "." + process.env.ENV : ""}`,
+  path: `../.env${process.env.ENV ? "." + process.env.ENV : ""}`,
 });
 
-import {
-  collToLamportsDecimal,
-  createMintFromKeypair,
-  getAssociatedTokenAddress,
-} from "./utils/utils";
+import { collToLamportsDecimal } from "./utils/utils";
 import { PublicKey } from "@solana/web3.js";
 import { Farms } from "./Farms";
-import { getFarmsProgramId, mintTo, parseKeypairFile, setupAta } from "./utils";
+import { getFarmsProgramId, parseKeypairFile } from "./utils";
 import { initializeClient } from "./commands/utils";
 import { refreshFarmCommand } from "./commands/refresh_farm";
 import { refreshKlendFarmsCommand } from "./commands/refresh_klend_farm";
@@ -47,6 +42,13 @@ import {
   updateFarmRpsForRewardCommand,
 } from "./commands/example_update_rps_and_top_up";
 import { initFarmDelegated } from "./commands/init_farm_delegated";
+import {
+  createMintFromKeypair,
+  getAssociatedTokenAddress,
+  getMintDecimals,
+  mintTo,
+  setupAta,
+} from "./utils/token";
 
 const BaseMintOptions = ["base-mint", "base-mint-file", "init-base-mint"];
 export type BaseMintOption = (typeof BaseMintOptions)[number];

@@ -1,13 +1,7 @@
-import {
-  ConnectionConfig,
-  Keypair,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   collToLamportsDecimal,
-  createMint,
   getFarmAuthorityPDA,
   getFarmsProgramId,
   getFarmVaultPDA,
@@ -16,26 +10,18 @@ import {
   getTreasuryVaultPDA,
   getUserStatePDA,
   GlobalConfigAccounts,
-  mintTo,
-  setupAta,
   solAirdrop,
   createGlobalConfigPublicKeyRentExempt,
   sleep,
 } from "./utils";
 import Decimal from "decimal.js";
-import { getMintDecimals } from "@project-serum/serum/lib/market";
-import {
-  Cluster,
-  FarmsIdl,
-  UserAccounts,
-  FarmAccounts,
-  parseKeypairFile,
-} from "./utils";
+import { Cluster, UserAccounts, FarmAccounts, parseKeypairFile } from "./utils";
 import { FarmState } from "../rpc_client/accounts";
 import { Farms } from "../Farms";
 import { FarmConfigOption } from "../rpc_client/types";
 import { Chain, Web3Client } from "./sendTransactionsUtils";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { createMint, getMintDecimals, mintTo, setupAta } from "./token";
 
 export const SIZE_GLOBAL_CONFIG = 2136;
 export const SIZE_FARM_STATE = 8336;
@@ -44,7 +30,7 @@ const LOCALNET_CHAIN_ID = 102;
 
 export type Env = {
   provider: anchor.AnchorProvider;
-  program: anchor.Program;
+  programId: PublicKey;
   initialOwner: Keypair;
   cluster: Cluster;
   web3Client: Web3Client;
@@ -128,12 +114,11 @@ export function setUpProgram(args: {
 
   // Programs
   const farmsProgramId = args.programOverride || getFarmsProgramId(cluster);
-  const program = new anchor.Program(FarmsIdl, farmsProgramId);
 
   return {
     initialOwner,
     provider,
-    program,
+    programId: farmsProgramId,
     cluster: cluster as Cluster,
     web3Client: client,
   };
@@ -152,14 +137,14 @@ export async function createGlobalAccountsWithAirdrop(
     rewardAtas.push(await setupAta(env.provider, rewardTokens[index], owner));
     treasuryVaults.push(
       await getTreasuryVaultPDA(
-        env.program.programId,
+        env.programId,
         globalConfig.publicKey,
         rewardTokens[index],
       ),
     );
   }
   let treasuryVaultAuthority = await getTreasuryAuthorityPDA(
-    env.program.programId,
+    env.programId,
     globalConfig.publicKey,
   );
 
@@ -182,13 +167,13 @@ export async function createGlobalAccounts(
 
   const globalConfig: Keypair = await createGlobalConfigPublicKeyRentExempt(
     env.provider,
-    env.program.programId,
+    env.programId,
   );
 
   let rewardAtas = new Array<PublicKey>();
   let treasuryVaults = new Array<PublicKey>();
   let treasuryVaultAuthority = await getTreasuryAuthorityPDA(
-    env.program.programId,
+    env.programId,
     globalConfig.publicKey,
   );
 
@@ -252,7 +237,7 @@ export async function createUser(
   }
 
   const userState = getUserStatePDA(
-    env.program.programId,
+    env.programId,
     farmAccounts.farmState.publicKey,
     owner.publicKey,
   );
@@ -358,12 +343,12 @@ export async function createFarmAccountsWithAirdrops(
   }
 
   const farmVault = await getFarmVaultPDA(
-    env.program.programId,
+    env.programId,
     farmState.publicKey,
     tokenMint,
   );
   const farmVaultAuthority = await getFarmAuthorityPDA(
-    env.program.programId,
+    env.programId,
     farmState.publicKey,
   );
 
@@ -372,7 +357,7 @@ export async function createFarmAccountsWithAirdrops(
   for (let index = 0; index < rewardTokens.length; index++) {
     rewardVaults.push(
       await getRewardVaultPDA(
-        env.program.programId,
+        env.programId,
         farmState.publicKey,
         rewardTokens[index],
       ),
@@ -426,12 +411,12 @@ export async function createFarmAccounts(
   const farmState: Keypair = Keypair.generate();
 
   const farmVault = getFarmVaultPDA(
-    env.program.programId,
+    env.programId,
     farmState.publicKey,
     tokenMint,
   );
   const farmVaultAuthority = getFarmAuthorityPDA(
-    env.program.programId,
+    env.programId,
     farmState.publicKey,
   );
 
@@ -460,7 +445,7 @@ export function createDelegatedFarmAccounts(
   const farmState: Keypair = Keypair.generate();
 
   const farmVaultAuthority = getFarmAuthorityPDA(
-    env.program.programId,
+    env.programId,
     farmState.publicKey,
   );
 

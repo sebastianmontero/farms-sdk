@@ -58,19 +58,19 @@ The base is 1 lamport so `--priority-fee-multiplier 50000` would mean 50_000 lam
 
 ### How to create a global config
 
-`yarn ts-node farms-sdk/src/client.ts init-global-config`
+`yarn cli init-global-config`
 
 ### How to create a farm
 
-`yarn ts-node farms-sdk/src/client.ts init-farm --token-mint <mint_pk> --priority-fee-multiplier 50000 --mode execute`
+`yarn cli init-farm --token-mint <mint_pk> --priority-fee-multiplier 50000 --mode execute`
 
 ### How to create a klend farm
 
-`npx ts-node farms-sdk/src/client.ts init-klend-farm --reserve <reserve_pk> --kind Collateral/Debt --multisig-to-execute <multisig_auth_pk> --pending-admin <multisig_auth_pk> --priority-fee-multiplier 50000 --mode execute`
+`yarn cli init-klend-farm --reserve <reserve_pk> --kind Collateral/Debt --multisig-to-execute <multisig_auth_pk> --pending-admin <multisig_auth_pk> --priority-fee-multiplier 50000 --mode execute`
 
 ### How to init a reward for a farm
 
-`npx ts-node farms-sdk/src/client.ts init-reward --farm <farm_pk> --reward-mint <mint_pk> --priority-fee-multiplier 50000 --mode execute`
+`yarn cli init-reward --farm <farm_pk> --reward-mint <mint_pk> --priority-fee-multiplier 50000 --mode execute`
 
 Initializing a reward can also be done by adding it to the config of an existing farm config. More details of this flow explained below.
 
@@ -79,7 +79,7 @@ Initializing a reward can also be done by adding it to the config of an existing
 The easiest way to update and *batch update* farms is to use the following flow:
 
 1. Download all farm configs:
-`npx ts-node farms-sdk/src/client.ts download-all-farm-configs --target-path configs/latest`
+`yarn cli download-all-farm-configs --target-path configs/latest`
 This will download all farms split in 3 main folders:
 - lending -> split in further folders for each market - based on the API, contains all farms (Coll/Debt) for all reserves for each market.
 - yvaults -> contains all farms for live strategies
@@ -92,9 +92,9 @@ To note:
 - `rewardToTopUpDurationDays` - works with `rewardToTopUp` and is used to calculated the reqiured RPS for the given topUp -> will update the rewardCurve *only if* it's a signle value curve and it's not modified by you.
 
 3. Update everything by running:
-`npx ts-node farms-sdk/src/client.ts upsert-all-farm-configs --target-path configs/latest --priority-fee-multiplier 50000 --mode print` - to only see the diff of your changes
-`npx ts-node farms-sdk/src/client.ts upsert-all-farm-configs --target-path configs/latest --priority-fee-multiplier 50000 --mode simulate` - to only see the transaction simulation of your changes
-`npx ts-node farms-sdk/src/client.ts upsert-all-farm-configs --target-path configs/latest --priority-fee-multiplier 50000 --mode execute/multisig` - to either execute or get the bs58 txns for multisig
+`yarn cli upsert-all-farm-configs --target-path configs/latest --priority-fee-multiplier 50000 --mode print` - to only see the diff of your changes
+`yarn cli upsert-all-farm-configs --target-path configs/latest --priority-fee-multiplier 50000 --mode simulate` - to only see the transaction simulation of your changes
+`yarn cli upsert-all-farm-configs --target-path configs/latest --priority-fee-multiplier 50000 --mode execute/multisig` - to either execute or get the bs58 txns for multisig
 
 ### How to change a farm admin
 
@@ -102,19 +102,19 @@ First you need to make sure the pending admin is set to the right armin. This ca
 
 Then run the following command in order to set the current admin to the pending admin. (Can only be signed by the pending admin)
 
-`npx ts-node farms-sdk/src/client.ts update-farm-admin --farm farm_address --priority-fee-multiplier 1000 --mode execute/multisig`
+`yarn cli update-farm-admin --farm farm_address --priority-fee-multiplier 1000 --mode execute/multisig`
 
 
 ### How to Initialize and Refresh user obligation for new Klend farm
 
 1. Download the obligations:
-`npx ts-node farms-sdk/src/client.ts download-all-user-obligations-for-reserve --market <market> --reserve <reserve>`
+`yarn cli download-all-user-obligations-for-reserve --market <market> --reserve <reserve>`
 
 2. Initialize all user obligations:
-`npx ts-node farms-sdk/src/client.ts init-all-klend-user-obligation-farms-from-file --market <market> --file obligations-<reserve>.json`
+`yarn cli init-all-klend-user-obligation-farms-from-file --market <market> --file obligations-<reserve>.json`
 
 3. Refresh all user obligations:
-`npx ts-node farms-sdk/src/client.ts refresh-all-klend-obligation-farms-from-file --market <market> --file obligations-<reserve>.json`
+`yarn cli refresh-all-klend-obligation-farms-from-file --market <market> --file obligations-<reserve>.json`
 
 ### How to Set RPS as a delegated farm admin
 

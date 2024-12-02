@@ -1,7 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as fs from "fs";
 import * as FarmsErrors from "../rpc_client/errors";
-import { TokenInstructions } from "@project-serum/serum";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   Connection,
@@ -13,15 +12,11 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import { Decimal } from "decimal.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import * as web3 from "@solana/web3.js";
 import { Env, SIZE_GLOBAL_CONFIG, SIZE_FARM_STATE } from "./setup";
 import { GlobalConfig, UserState, FarmState } from "../rpc_client/accounts";
-import FARMS_IDL from "../rpc_client/farms.json";
 import { farmsId } from "../Farms";
-import { createAddExtraComputeUnitFeeTransaction } from "../commands/utils";
 
-export const FarmsIdl = FARMS_IDL as anchor.Idl;
 export const WAD = new Decimal("1".concat(Array(18 + 1).join("0")));
 
 export function parseKeypairFile(file: string): Keypair {
@@ -71,57 +66,6 @@ export interface UserAccounts {
   rewardAtas: Array<PublicKey>;
 }
 
-export async function createMint(
-  provider: anchor.AnchorProvider,
-  authority: PublicKey,
-  decimals: number = 6,
-): Promise<PublicKey> {
-  const mint = anchor.web3.Keypair.generate();
-  return await createMintFromKeypair(provider, authority, mint, decimals);
-}
-
-export async function createMintFromKeypair(
-  provider: anchor.AnchorProvider,
-  authority: PublicKey,
-  mint: Keypair,
-  decimals: number = 6,
-): Promise<PublicKey> {
-  const instructions = await createMintInstructions(
-    provider,
-    authority,
-    mint.publicKey,
-    decimals,
-  );
-
-  const tx = new anchor.web3.Transaction();
-  tx.add(...instructions);
-
-  await provider.sendAndConfirm(tx, [mint]);
-  return mint.publicKey;
-}
-
-async function createMintInstructions(
-  provider: anchor.AnchorProvider,
-  authority: PublicKey,
-  mint: PublicKey,
-  decimals: number,
-): Promise<TransactionInstruction[]> {
-  return [
-    anchor.web3.SystemProgram.createAccount({
-      fromPubkey: provider.wallet.publicKey,
-      newAccountPubkey: mint,
-      space: 82,
-      lamports: await provider.connection.getMinimumBalanceForRentExemption(82),
-      programId: TOKEN_PROGRAM_ID,
-    }),
-    TokenInstructions.initializeMint({
-      mint,
-      decimals,
-      mintAuthority: authority,
-    }),
-  ];
-}
-
 export async function solAirdrop(
   provider: anchor.AnchorProvider,
   account: PublicKey,
@@ -163,120 +107,6 @@ export async function checkIfAccountExists(
   account: PublicKey,
 ): Promise<boolean> {
   return (await connection.getAccountInfo(account)) != null;
-}
-
-export async function getAssociatedTokenAddress(
-  owner: PublicKey,
-  tokenMintAddress: PublicKey,
-  tokenProgram: PublicKey,
-): Promise<PublicKey> {
-  return await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    tokenProgram,
-    tokenMintAddress,
-    owner,
-    true,
-  );
-}
-
-export async function createAssociatedTokenAccountIdempotentInstruction(
-  owner: PublicKey,
-  mint: PublicKey,
-  payer: PublicKey = owner,
-  tokenProgram: PublicKey,
-  ata?: PublicKey,
-): Promise<[PublicKey, TransactionInstruction]> {
-  let ataAddress = ata;
-  if (!ataAddress) {
-    ataAddress = await getAssociatedTokenAddress(owner, mint, tokenProgram);
-  }
-  const createUserTokenAccountIx =
-    Token.createAssociatedTokenAccountInstruction(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram,
-      mint,
-      ataAddress,
-      owner,
-      payer,
-    );
-  // idempotent ix discriminator is 1
-  createUserTokenAccountIx.data = Buffer.from([1]);
-  return [ataAddress, createUserTokenAccountIx];
-}
-
-export async function setupAta(
-  provider: anchor.AnchorProvider,
-  tokenMintAddress: PublicKey,
-  user: Keypair,
-): Promise<PublicKey> {
-  const ata = await getAssociatedTokenAddress(
-    user.publicKey,
-    tokenMintAddress,
-    TOKEN_PROGRAM_ID,
-  );
-  if (!(await checkIfAccountExists(provider.connection, ata))) {
-    const [, ix] = await createAssociatedTokenAccountIdempotentInstruction(
-      user.publicKey,
-      tokenMintAddress,
-      user.publicKey,
-      TOKEN_PROGRAM_ID,
-      ata,
-    );
-    const tx = new Transaction().add(ix);
-    await provider.connection.sendTransaction(tx, [user]);
-  }
-  return ata;
-}
-
-export async function mintTo(
-  provider: anchor.AnchorProvider,
-  mintPubkey: PublicKey,
-  tokenAccount: PublicKey,
-  amount: number,
-) {
-  const tx = new Transaction().add(
-    Token.createMintToInstruction(
-      TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-      mintPubkey, // mint
-      tokenAccount, // receiver (sholud be a token account)
-      provider.wallet.publicKey, // mint authority
-      [], // only multisig account will use. leave it empty now.
-      amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
-    ),
-  );
-
-  const microLamport = 10 ** 6; // 1 lamport
-  const computeUnits = 200_000;
-  const microLamportsPrioritizationFee = microLamport / computeUnits;
-
-  const priorityFeeIxn = createAddExtraComputeUnitFeeTransaction(
-    computeUnits,
-    microLamportsPrioritizationFee * 5,
-  );
-  tx.add(...priorityFeeIxn);
-
-  await provider.sendAndConfirm(tx);
-}
-
-export async function transferToken(
-  provider: anchor.AnchorProvider,
-  fromAccount: Signer,
-  fromTokenAccount: PublicKey,
-  toTokenAccount: PublicKey,
-  amount: number,
-) {
-  let tx = new Transaction().add(
-    Token.createTransferInstruction(
-      TOKEN_PROGRAM_ID,
-      fromTokenAccount,
-      toTokenAccount,
-      fromAccount.publicKey,
-      [],
-      amount,
-    ),
-  );
-  await web3.sendAndConfirmTransaction(provider.connection, tx, [fromAccount]);
-  await sleep(500);
 }
 
 /**
@@ -732,21 +562,6 @@ export function convertAmountToStake(
 export const parseTokenSymbol = (tokenSymbol: number[]): string => {
   return String.fromCharCode(...tokenSymbol.filter((x) => x > 0));
 };
-
-export async function getMintDecimals(
-  env: Env,
-  mint: PublicKey,
-  tokenProgram: PublicKey,
-): Promise<number> {
-  return (
-    await new Token(
-      env.provider.connection,
-      mint,
-      tokenProgram,
-      env.initialOwner,
-    ).getMintInfo()
-  ).decimals;
-}
 
 export async function retryAsync(
   fn: () => Promise<any>,

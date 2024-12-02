@@ -44,7 +44,7 @@ export function initializeClient(
   });
 
   !multisig && console.log("\nSettings ⚙️");
-  !multisig && console.log("Program ID:", env.program.programId.toString());
+  !multisig && console.log("Program ID:", env.programId.toString());
   !multisig && console.log("Admin:", resolvedAdmin);
   !multisig && console.log("Cluster:", resolvedCluster);
 

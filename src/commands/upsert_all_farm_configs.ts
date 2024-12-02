@@ -6,7 +6,6 @@ import {
   TransactionSignature,
   Signer,
   VersionedTransaction,
-  VersionedMessage,
 } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { Farms, printMultisigTx, printSimulateTx } from "../Farms";
@@ -19,7 +18,6 @@ import {
 import {
   Env,
   getFarmsProgramId,
-  getMintDecimals,
   noopProfiledFunctionExecution,
   retryAsync,
   signSendAndConfirmRawTransactionWithRetry,
@@ -29,7 +27,6 @@ import { FarmConfig } from "./download_all_farm_configs";
 import fs from "fs";
 import clc from "cli-color";
 import { U64_MAX } from "@kamino-finance/klend-sdk";
-import { RpsDecimals } from "../rpc_client/types/FarmConfigOption";
 import { BN } from "@coral-xyz/anchor";
 
 const microLamport = 10 ** 6;
@@ -1680,18 +1677,29 @@ function parseFarmConfigFromFile(farmConfigFromFile: any): FarmConfig {
     globalConfig: new PublicKey(farmConfigFromFile.globalConfig),
     strategyId: new PublicKey(farmConfigFromFile.strategyId),
     depositCapAmount: farmConfigFromFile.depositCapAmount,
-    rewards: farmConfigFromFile.rewards.map((reward) => {
-      return {
-        rewardTokenMint: new PublicKey(reward.rewardTokenMint),
-        rewardType: reward.rewardType,
-        rewardPerSecondDecimals: reward.rewardPerSecondDecimals,
-        minClaimDurationSeconds: reward.minClaimDurationSeconds,
-        rewardCurve: reward.rewardCurve,
-        rewardAvailable: reward.rewardAvailable,
-        rewardToTopUp: reward.rewardToTopUp,
-        rewardToTopUpDurationDays: reward.rewardToTopUpDurationDays,
-      };
-    }),
+    rewards: farmConfigFromFile.rewards.map(
+      (reward: {
+        rewardTokenMint: string;
+        rewardType: string;
+        rewardPerSecondDecimals: number;
+        minClaimDurationSeconds: number;
+        rewardCurve?: string;
+        rewardAvailable?: boolean;
+        rewardToTopUp?: number;
+        rewardToTopUpDurationDays?: number;
+      }) => {
+        return {
+          rewardTokenMint: new PublicKey(reward.rewardTokenMint),
+          rewardType: reward.rewardType,
+          rewardPerSecondDecimals: reward.rewardPerSecondDecimals,
+          minClaimDurationSeconds: reward.minClaimDurationSeconds,
+          rewardCurve: reward.rewardCurve,
+          rewardAvailable: reward.rewardAvailable,
+          rewardToTopUp: reward.rewardToTopUp,
+          rewardToTopUpDurationDays: reward.rewardToTopUpDurationDays,
+        };
+      },
+    ),
     pendingFarmAdmin: new PublicKey(farmConfigFromFile.pendingFarmAdmin),
     scopePrices: new PublicKey(farmConfigFromFile.scopePrices),
     scopePriceOracleId: farmConfigFromFile.scopePriceOracleId,

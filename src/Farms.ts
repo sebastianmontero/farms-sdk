@@ -1,5 +1,4 @@
-import { AnchorProvider, BN, Idl, Program, Provider } from "@coral-xyz/anchor";
-import FARMS_IDL from "./rpc_client/farms.json";
+import { AnchorProvider, BN, Provider } from "@coral-xyz/anchor";
 
 // @ts-ignore
 import { binary_to_base58 } from "base58-js";
@@ -19,14 +18,12 @@ import {
   calculateNewRewardToBeIssued,
   calculatePendingRewards,
   checkIfAccountExists,
-  createAssociatedTokenAccountIdempotentInstruction,
   getReadOnlyWallet,
   scopePriceForFarm,
   SIZE_FARM_STATE,
   SIZE_GLOBAL_CONFIG,
 } from "./utils";
 import {
-  getAssociatedTokenAddress,
   getTreasuryVaultPDA,
   getUserStatePDA,
   collToLamportsDecimal,
@@ -64,26 +61,23 @@ import { OraclePrices } from "@hubbleprotocol/scope-sdk";
 import { chunks } from "./utils/arrayUtils";
 import {
   KaminoMarket,
-  KaminoReserve,
   lamportsToNumberDecimal,
-  ObligationTypeTag,
   Position,
   PubkeyHashMap,
   PublicKeySet,
   U64_MAX,
 } from "@kamino-finance/klend-sdk";
-import { ReserveFarmKind } from "@kamino-finance/klend-sdk/dist/idl_codegen/types";
-import {
-  createAddExtraComputeUnitFeeTransaction,
-  unwrap,
-} from "./commands/utils";
-import { getMintDecimals } from "@project-serum/serum/lib/market";
+import { createAddExtraComputeUnitFeeTransaction } from "./commands/utils";
 import {
   signSendAndConfirmRawTransactionWithRetry,
   Web3Client,
 } from "./utils/sendTransactionsUtils";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { batchFetch } from "./utils/batch";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddress,
+} from "./utils/token";
 
 export const farmsId = new PublicKey(
   "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr",
@@ -105,7 +99,6 @@ export interface RewardCurvePoint {
 export class Farms {
   private readonly _connection: Connection;
   private readonly _provider: Provider;
-  private readonly _farmsProgram: Program;
   private readonly _farmsProgramId: PublicKey;
 
   constructor(connection: Connection) {
@@ -114,11 +107,6 @@ export class Farms {
       commitment: connection.commitment,
     });
     this._farmsProgramId = farmsId;
-    this._farmsProgram = new Program(
-      FARMS_IDL as Idl,
-      this._farmsProgramId,
-      this._provider,
-    );
   }
 
   getConnection() {
@@ -127,10 +115,6 @@ export class Farms {
 
   getProgramID() {
     return this._farmsProgramId;
-  }
-
-  getProgram() {
-    return this._farmsProgram;
   }
 
   async getAllUserStatesForUser(user: PublicKey): Promise<Array<UserAndKey>> {
@@ -147,30 +131,32 @@ export class Farms {
       dataSize: UserState.layout.span + 8,
     });
 
-    const userStates = (
-      await this._farmsProgram.account.userState.all(filters)
+    return (
+      await this._connection.getProgramAccounts(this._farmsProgramId, {
+        filters,
+      })
     ).map((x) => {
-      let res: UserAndKey = {
-        userState: new UserState(x.account as unknown as UserStateFields),
-        key: x.publicKey,
+      const userAndKey: UserAndKey = {
+        userState: UserState.decode(x.account.data),
+        key: x.pubkey,
       };
-      return res;
+      return userAndKey;
     });
-
-    return userStates;
   }
 
   async getAllUserStates(): Promise<UserAndKey[]> {
     return (
-      await this._farmsProgram.account.userState.all([
-        {
-          dataSize: UserState.layout.span + 8,
-        },
-      ])
+      await this._connection.getProgramAccounts(this._farmsProgramId, {
+        filters: [
+          {
+            dataSize: UserState.layout.span + 8,
+          },
+        ],
+      })
     ).map((x) => {
       const userAndKey: UserAndKey = {
-        userState: new UserState(x.account as unknown as UserStateFields),
-        key: x.publicKey,
+        userState: UserState.decode(x.account.data),
+        key: x.pubkey,
       };
       return userAndKey;
     });
@@ -180,18 +166,23 @@ export class Farms {
     isFarmDelegated: boolean,
   ): Promise<UserAndKey[]> {
     return (
-      await this._farmsProgram.account.userState.all([
-        {
-          dataSize: UserState.layout.span + 8,
-        },
-        {
-          memcmp: { bytes: isFarmDelegated ? "2" : "1", offset: 80 },
-        },
-      ])
+      await this._connection.getProgramAccounts(this._farmsProgramId, {
+        filters: [
+          {
+            dataSize: UserState.layout.span + 8,
+          },
+          {
+            memcmp: {
+              offset: 80,
+              bytes: isFarmDelegated ? "2" : "1",
+            },
+          },
+        ],
+      })
     ).map((x) => {
       const userAndKey: UserAndKey = {
-        userState: new UserState(x.account as unknown as UserStateFields),
-        key: x.publicKey,
+        userState: UserState.decode(x.account.data),
+        key: x.pubkey,
       };
       return userAndKey;
     });
@@ -251,21 +242,23 @@ export class Farms {
 
   async getAllUserStatesForFarm(farm: PublicKey): Promise<UserAndKey[]> {
     return (
-      await this._farmsProgram.account.userState.all([
-        {
-          dataSize: UserState.layout.span + 8,
-        },
-        {
-          memcmp: {
-            offset: 8 + 8,
-            bytes: farm.toBase58(),
+      await this._connection.getProgramAccounts(this._farmsProgramId, {
+        filters: [
+          {
+            dataSize: UserState.layout.span + 8,
           },
-        },
-      ])
+          {
+            memcmp: {
+              offset: 8 + 8,
+              bytes: farm.toBase58(),
+            },
+          },
+        ],
+      })
     ).map((x) => {
       const userAndKey: UserAndKey = {
-        userState: new UserState(x.account as unknown as UserStateFields),
-        key: x.publicKey,
+        userState: UserState.decode(x.account.data),
+        key: x.pubkey,
       };
       return userAndKey;
     });
@@ -285,30 +278,32 @@ export class Farms {
       dataSize: FarmState.layout.span + 8,
     });
 
-    const farms = (await this._farmsProgram.account.farmState.all(filters)).map(
-      (x) => {
-        let res: FarmAndKey = {
-          farmState: new FarmState(x.account as unknown as FarmStateFields),
-          key: x.publicKey,
-        };
-        return res;
-      },
-    );
-
-    return farms;
+    return (
+      await this._connection.getProgramAccounts(this._farmsProgramId, {
+        filters,
+      })
+    ).map((x) => {
+      const farmAndKey: FarmAndKey = {
+        farmState: FarmState.decode(x.account.data),
+        key: x.pubkey,
+      };
+      return farmAndKey;
+    });
   }
 
   async getAllFarmStates(): Promise<FarmAndKey[]> {
     return (
-      await this._farmsProgram.account.farmState.all([
-        {
-          dataSize: FarmState.layout.span + 8,
-        },
-      ])
-    ).map((x): FarmAndKey => {
+      await this._connection.getProgramAccounts(this._farmsProgramId, {
+        filters: [
+          {
+            dataSize: FarmState.layout.span + 8,
+          },
+        ],
+      })
+    ).map((x) => {
       const farmAndKey: FarmAndKey = {
-        farmState: new FarmState(x.account as unknown as FarmStateFields),
-        key: x.publicKey,
+        farmState: FarmState.decode(x.account.data),
+        key: x.pubkey,
       };
       return farmAndKey;
     });
@@ -2276,294 +2271,6 @@ export class Farms {
     return sig;
   }
 
-  async getAllPointsData(
-    scopePricesPubkey: PublicKey,
-    klendProgramId: PublicKey,
-    kaminoMarketPubkey: PublicKey,
-    pointsMint: PublicKey,
-  ): Promise<PubkeyHashMap<PublicKey, UserPointsBreakdown>> {
-    const c = this._connection;
-    const market = kaminoMarketPubkey;
-    const ts = new Decimal(new Date().getTime() / 1000);
-
-    // Fetch all the data
-    const scopePrices = unwrap(await OraclePrices.fetch(c, scopePricesPubkey));
-    const kaminoMarket: KaminoMarket = unwrap(
-      await KaminoMarket.load(c, market, 450, klendProgramId),
-    );
-
-    const reservesWithFarms: KaminoReserve[] = [];
-    kaminoMarket.reserves.forEach((reserve, _key) => {
-      if (
-        !reserve.state.farmCollateral.equals(PublicKey.default) ||
-        !reserve.state.farmDebt.equals(PublicKey.default)
-      ) {
-        reservesWithFarms.push(reserve);
-      }
-    });
-
-    // Final return value
-    const userToPointsBreakdown: PubkeyHashMap<PublicKey, UserPointsBreakdown> =
-      new PubkeyHashMap();
-
-    const pointsDecimal = await getMintDecimals(c, pointsMint);
-    const pointsFactor = 10 ** pointsDecimal;
-
-    const farmPubkeyToFarmStates: PubkeyHashMap<PublicKey, FarmState> =
-      new PubkeyHashMap();
-    const pointsFarmToReserve: PubkeyHashMap<PublicKey, PublicKey> =
-      new PubkeyHashMap();
-    const userDollarValueBoosts = new PubkeyHashMap<
-      PublicKey,
-      [Decimal, Decimal][]
-    >();
-    const userPerPositionDollarValueBoosts = new PubkeyHashMap<
-      PublicKey,
-      PubkeyHashMap<PublicKey, [Decimal, Decimal][]>
-    >();
-    const userBoost = new PubkeyHashMap<PublicKey, Decimal>();
-
-    // Fetch all the farms data
-    for (const reserve of reservesWithFarms) {
-      const collFarm = reserve.state.farmCollateral;
-      const debtFarm = reserve.state.farmDebt;
-
-      if (!collFarm.equals(PublicKey.default)) {
-        const collFarmState = await FarmState.fetch(c, collFarm);
-        if (collFarmState) {
-          const rewardInfo = collFarmState.rewardInfos.find((r) =>
-            r.token.mint.equals(pointsMint),
-          );
-          if (rewardInfo) {
-            console.log("Setting coll farm mapping", collFarm.toBase58());
-            farmPubkeyToFarmStates.set(collFarm, collFarmState);
-            pointsFarmToReserve.set(collFarm, reserve.address);
-          }
-        }
-      }
-
-      if (!debtFarm.equals(PublicKey.default)) {
-        const debtFarmState = await FarmState.fetch(c, debtFarm);
-        if (debtFarmState) {
-          const rewardInfo = debtFarmState.rewardInfos.find((r) =>
-            r.token.mint.equals(pointsMint),
-          );
-          if (rewardInfo) {
-            console.log("Setting debt farm mapping", debtFarm.toBase58());
-            farmPubkeyToFarmStates.set(debtFarm, debtFarmState);
-            pointsFarmToReserve.set(debtFarm, reserve.address);
-          }
-        }
-      }
-    }
-
-    const {
-      perAssetCollBoosts,
-      perAssetDebtBoosts,
-      perAssetProductBoosts,
-      perProductBoosts,
-    } = getAllBoosts(kaminoMarket);
-
-    /// Globally total points for entire market
-    {
-      let totalPointsEarned = 0;
-      let totalPointsPending = 0;
-      for (const [_farmPubkey, farmState] of farmPubkeyToFarmStates.entries()) {
-        const rewardIndex = farmState.rewardInfos.findIndex((r: RewardInfo) =>
-          r.token.mint.equals(pointsMint),
-        );
-
-        const rewardInfo: RewardInfo = farmState.rewardInfos[rewardIndex];
-        let scopePrice: Decimal | null = scopePriceForFarm(
-          farmState,
-          scopePrices,
-        );
-
-        // TODO: simulate time passing, pending rewards
-        const pointsEarned = rewardInfo.rewardsIssuedUnclaimed.toNumber();
-        totalPointsEarned += pointsEarned / pointsFactor;
-
-        // To simulate points pending for total farm, we simulate a user that
-        // is staking the entire farm
-        const pointsPending = calculateNewRewardToBeIssued(
-          farmState,
-          ts,
-          rewardIndex,
-          scopePrice,
-        );
-        totalPointsPending += pointsPending.toNumber() / pointsFactor;
-      }
-      console.log("Total Points Earned", totalPointsEarned);
-      console.log("Total Points Pending", totalPointsPending);
-    }
-
-    /// Total points per user
-    const userToFarmStates: PubkeyHashMap<
-      PublicKey,
-      PubkeyHashMap<PublicKey, [UserState, FarmState, Decimal]>
-    > = new PubkeyHashMap();
-    const userFarmStatesToFarmStates: PubkeyHashMap<PublicKey, UserState> =
-      new PubkeyHashMap();
-
-    for (const [farmPubkey, farmState] of farmPubkeyToFarmStates.entries()) {
-      const usersForFarms = await this.getAllUserStatesForFarm(farmPubkey);
-      const rewardIndex = farmState.rewardInfos.findIndex((r: RewardInfo) =>
-        r.token.mint.equals(pointsMint),
-      );
-
-      for (const userAndKey of usersForFarms) {
-        const { userState, key: userFarmStateKey } = userAndKey;
-
-        const totalPointsForUserForFarm = calculatePendingRewards(
-          farmState,
-          userState,
-          rewardIndex,
-          ts,
-          scopePrices,
-        ).div(pointsFactor);
-
-        if (!userToFarmStates.has(userState.owner)) {
-          userToFarmStates.set(userState.owner, new PubkeyHashMap());
-        }
-        userToFarmStates
-          .get(userState.owner)
-          ?.set(farmPubkey, [userState, farmState, totalPointsForUserForFarm]);
-
-        userFarmStatesToFarmStates.set(userFarmStateKey, userState);
-      }
-    }
-
-    // Total per user
-    for (const [user, pointsEarnedPerFarm] of userToFarmStates.entries()) {
-      userBoost.set(user, new Decimal(0));
-      userDollarValueBoosts.set(user, []);
-      userPerPositionDollarValueBoosts.set(user, new PubkeyHashMap());
-
-      let totalPointsEarned = 0;
-      if (!userToPointsBreakdown.has(user)) {
-        userToPointsBreakdown.set(user, newUserPointsBreakdown());
-      }
-      let currentUserEntry = userToPointsBreakdown.get(user)!;
-
-      for (const [_farm, pointsEntry] of pointsEarnedPerFarm.entries()) {
-        const [_userState, _farmState, pointsThisProduct] = pointsEntry;
-        totalPointsEarned += pointsThisProduct.toNumber();
-      }
-
-      currentUserEntry.totalPoints =
-        currentUserEntry.totalPoints.plus(totalPointsEarned);
-    }
-
-    // Breakdown per user
-    for (const [user, _] of userBoost.entries()) {
-      const userObligations = await kaminoMarket.getAllUserObligations(user);
-      const userDollarBoosts = userDollarValueBoosts.get(user)!;
-      const thisObligationPerDollarBoost: [Decimal, Decimal][] = [];
-      let thisUserPointsPerDay = 0;
-      for (const obligation of userObligations) {
-        let thisUserPointsPerDayPerObligation = 0;
-        const tag = obligation.state.tag.toNumber();
-
-        for (const [_key, depositPosition] of obligation.deposits) {
-          const mint = depositPosition.mintAddress;
-          const sideBoost = perAssetCollBoosts.get(mint)!;
-          const productBoost = perProductBoosts.get(tag)!;
-          const assetProductBoost = perAssetProductBoosts.get(mint)!.get(tag)!;
-
-          const finalBoost = sideBoost.mul(productBoost).mul(assetProductBoost);
-
-          // Calculate boost avg
-          const dollarValue = depositPosition.marketValueRefreshed;
-          userDollarBoosts.push([dollarValue, dollarValue.mul(finalBoost)]);
-          thisObligationPerDollarBoost.push([
-            dollarValue,
-            dollarValue.mul(finalBoost),
-          ]);
-
-          // Calculate points per day
-          const pointsPerDay = calculatePointsPerDay(
-            kaminoMarket,
-            user,
-            mint,
-            farmPubkeyToFarmStates,
-            pointsMint,
-            pointsFactor,
-            depositPosition,
-            true,
-            finalBoost,
-            scopePrices,
-          );
-
-          console.log("pointsPerDay", pointsPerDay.toFixed());
-          thisUserPointsPerDay += pointsPerDay.toNumber();
-          thisUserPointsPerDayPerObligation += pointsPerDay.toNumber();
-        }
-
-        for (const [_key, borrowPosition] of obligation.borrows) {
-          const mint = borrowPosition.mintAddress;
-          const sideBoost = perAssetDebtBoosts.get(mint)!;
-          const productBoost = perProductBoosts.get(tag)!;
-          const assetProductBoost = perAssetProductBoosts.get(mint)!.get(tag)!;
-
-          const dollarValue = borrowPosition.marketValueRefreshed;
-          const finalBoost = sideBoost.mul(productBoost).mul(assetProductBoost);
-          userDollarBoosts.push([dollarValue, dollarValue.mul(finalBoost)]);
-          thisObligationPerDollarBoost.push([
-            dollarValue,
-            dollarValue.mul(finalBoost),
-          ]);
-
-          // Calculate points per day
-          const pointsPerDay = calculatePointsPerDay(
-            kaminoMarket,
-            user,
-            mint,
-            farmPubkeyToFarmStates,
-            pointsMint,
-            pointsFactor,
-            borrowPosition,
-            false,
-            finalBoost,
-            scopePrices,
-          );
-
-          thisUserPointsPerDay += pointsPerDay.toNumber();
-          thisUserPointsPerDayPerObligation += pointsPerDay.toNumber();
-        }
-
-        userPerPositionDollarValueBoosts
-          .get(user)!
-          .set(obligation.obligationAddress, thisObligationPerDollarBoost);
-
-        userToPointsBreakdown
-          .get(user)!
-          .perPositionPointsPerDay.set(
-            obligation.obligationAddress,
-            new Decimal(thisUserPointsPerDayPerObligation),
-          );
-      }
-
-      userToPointsBreakdown.get(user)!.currentPointsPerDay = new Decimal(
-        thisUserPointsPerDay,
-      );
-    }
-
-    for (const [user, _] of userBoost.entries()) {
-      const avgBoostPerUser = calcAvgBoost(userDollarValueBoosts.get(user)!);
-      userToPointsBreakdown.get(user)!.currentBoost = avgBoostPerUser;
-      for (const [
-        obligation,
-        dollarDeposits,
-      ] of userPerPositionDollarValueBoosts.get(user)?.entries()!) {
-        userToPointsBreakdown
-          .get(user)!
-          .perPositionBoost.set(obligation, calcAvgBoost(dollarDeposits));
-      }
-    }
-
-    return userToPointsBreakdown;
-  }
-
   async updateFarmRpsForRewardIx(
     payer: PublicKey,
     rewardMint: PublicKey,
@@ -2844,83 +2551,6 @@ export const calculatePointsPerDay = (
   // console.log("-----");
 
   return pointsPerDayThisTokenInThisLoan;
-};
-
-export const getAllBoosts = (kaminoMarket: KaminoMarket) => {
-  const lendingMarketState = kaminoMarket.state;
-  const perAssetCollBoosts: PubkeyHashMap<PublicKey, Decimal> =
-    new PubkeyHashMap();
-  const perAssetDebtBoosts: PubkeyHashMap<PublicKey, Decimal> =
-    new PubkeyHashMap();
-  const perAssetProductBoosts: PubkeyHashMap<
-    PublicKey,
-    Map<number, Decimal>
-  > = new PubkeyHashMap();
-  const perProductBoosts: Map<number, Decimal> = new Map()
-    .set(
-      ObligationTypeTag.Vanilla.valueOf(),
-      new Decimal(
-        lendingMarketState.multiplierPointsTagBoost[
-          ObligationTypeTag.Vanilla.valueOf()
-        ],
-      ),
-    )
-    .set(
-      ObligationTypeTag.Multiply.valueOf(),
-      new Decimal(
-        lendingMarketState.multiplierPointsTagBoost[
-          ObligationTypeTag.Multiply.valueOf()
-        ],
-      ),
-    )
-    .set(
-      ObligationTypeTag.Leverage.valueOf(),
-      new Decimal(
-        lendingMarketState.multiplierPointsTagBoost[
-          ObligationTypeTag.Leverage.valueOf()
-        ],
-      ),
-    )
-    .set(
-      ObligationTypeTag.Lending.valueOf(),
-      new Decimal(
-        lendingMarketState.multiplierPointsTagBoost[
-          ObligationTypeTag.Lending.valueOf()
-        ],
-      ),
-    );
-
-  // Collect boosts
-  for (const [_key, reserve] of kaminoMarket.reserves) {
-    const sideBoosts = reserve.state.config.multiplierSideBoost;
-    const tagBoosts = reserve.state.config.multiplierTagBoost;
-    const collBoost = sideBoosts[ReserveFarmKind.Collateral.discriminator];
-    const debtBoost = sideBoosts[ReserveFarmKind.Debt.discriminator];
-
-    const borrowLendBoost = tagBoosts[ObligationTypeTag.Vanilla.valueOf()];
-    const multiplyBoost = tagBoosts[ObligationTypeTag.Multiply.valueOf()];
-    const lendingBoost = tagBoosts[ObligationTypeTag.Lending.valueOf()];
-    const leverageBoost = tagBoosts[ObligationTypeTag.Leverage.valueOf()];
-
-    perAssetCollBoosts.set(reserve.getLiquidityMint(), new Decimal(collBoost));
-    perAssetDebtBoosts.set(reserve.getLiquidityMint(), new Decimal(debtBoost));
-
-    perAssetProductBoosts.set(
-      reserve.getLiquidityMint(),
-      new Map()
-        .set(ObligationTypeTag.Vanilla.valueOf(), borrowLendBoost)
-        .set(ObligationTypeTag.Multiply.valueOf(), multiplyBoost)
-        .set(ObligationTypeTag.Leverage.valueOf(), lendingBoost)
-        .set(ObligationTypeTag.Lending.valueOf(), leverageBoost),
-    );
-  }
-
-  return {
-    perAssetCollBoosts,
-    perAssetDebtBoosts,
-    perAssetProductBoosts,
-    perProductBoosts,
-  };
 };
 
 const newUserPointsBreakdown = (): UserPointsBreakdown => ({
