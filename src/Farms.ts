@@ -300,13 +300,20 @@ export class Farms {
           },
         ],
       })
-    ).map((x) => {
-      const farmAndKey: FarmAndKey = {
-        farmState: FarmState.decode(x.account.data),
-        key: x.pubkey,
-      };
-      return farmAndKey;
-    });
+    )
+      .map((x) => {
+        try {
+          const farmAndKey: FarmAndKey = {
+            farmState: FarmState.decode(x.account.data),
+            key: x.pubkey,
+          };
+
+          return farmAndKey;
+        } catch (err) {
+          return null;
+        }
+      })
+      .filter((x) => x !== null) as FarmAndKey[];
   }
 
   async getAllFarmStatesByPubkeys(keys: PublicKey[]): Promise<FarmAndKey[]> {

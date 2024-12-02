@@ -63,7 +63,11 @@ export async function downloadAllFarmConfigs(targetPath: string) {
               strategy: undefined,
             },
           );
-
+          if (!farmConfig.scopePrices.equals(PublicKey.default)) {
+            console.log(
+              `farmPk: ${farmConfig.farmPubkey}  scopePrice: ${farmConfig.scopePrices.toBase58()}`,
+            );
+          }
           fs.writeFileSync(
             `${targetPath}/lending/${market.marketName}/${
               reserve!.symbol
@@ -94,7 +98,11 @@ export async function downloadAllFarmConfigs(targetPath: string) {
               strategy: undefined,
             },
           );
-
+          if (!farmConfig.scopePrices.equals(PublicKey.default)) {
+            console.log(
+              `farmPk: ${farmConfig.farmPubkey}  scopePrice: ${farmConfig.scopePrices.toBase58()}`,
+            );
+          }
           fs.writeFileSync(
             `${targetPath}/lending/${market.marketName}/${
               reserve!.symbol
@@ -137,7 +145,11 @@ export async function downloadAllFarmConfigs(targetPath: string) {
         });
         // in case strategy is not set on farm side, we override value so we set on next upsert
         farmConfig.strategyId = strategy.address;
-
+        if (!farmConfig.scopePrices.equals(PublicKey.default)) {
+          console.log(
+            `farmPk: ${farmConfig.farmPubkey}  scopePrice: ${farmConfig.scopePrices.toBase58()}`,
+          );
+        }
         fs.writeFileSync(
           `${targetPath}/yvaults/${strategy.address.toBase58()}.json`,
           JSON.stringify(farmConfig, null, 2),
@@ -162,7 +174,11 @@ export async function downloadAllFarmConfigs(targetPath: string) {
       market: undefined,
       strategy: undefined,
     });
-
+    if (!farmConfig.scopePrices.equals(PublicKey.default)) {
+      console.log(
+        `farmPk: ${farmConfig.farmPubkey}  scopePrice: ${farmConfig.scopePrices.toBase58()}`,
+      );
+    }
     fs.writeFileSync(
       `${targetPath}/standaloneFarms/${farmAndKey.key.toBase58()}.json`,
       JSON.stringify(farmConfig, null, 2),
