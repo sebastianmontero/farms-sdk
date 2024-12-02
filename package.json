@@ -38,9 +38,9 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
     "@coral-xyz/borsh": "^0.28.0",
-    "@hubbleprotocol/scope-sdk": "^5.0.20",
-    "@kamino-finance/klend-sdk": "^3.2.0",
-    "@kamino-finance/kliquidity-sdk": "^6.1.0",
+    "@hubbleprotocol/scope-sdk": "^7.0.0",
+    "@kamino-finance/klend-sdk": "^5.6.0",
+    "@kamino-finance/kliquidity-sdk": "^6.3.1",
     "@solana/spl-token": "^0.4.9",
     "@solana/web3.js": "^1.95.5",
     "base58-js": "1.0.5",
