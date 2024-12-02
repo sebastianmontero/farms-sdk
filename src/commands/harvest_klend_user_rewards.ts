@@ -1,4 +1,4 @@
-import { OraclePrices } from "@hubbleprotocol/scope-sdk";
+import { OraclePrices } from "@kamino-finance/scope-sdk";
 import {
   PublicKey,
   Transaction,

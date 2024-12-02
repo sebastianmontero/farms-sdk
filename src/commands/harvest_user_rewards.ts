@@ -1,4 +1,4 @@
-import { OraclePrices } from "@hubbleprotocol/scope-sdk";
+import { OraclePrices } from "@kamino-finance/scope-sdk";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { Farms, printSimulateTx } from "../Farms";

@@ -57,7 +57,7 @@ import {
 } from "./rpc_client/types/index";
 import { FarmAndKey, UserAndKey } from "./models";
 import { PROGRAM_ID } from "./rpc_client/programId";
-import { OraclePrices } from "@hubbleprotocol/scope-sdk";
+import { OraclePrices } from "@kamino-finance/scope-sdk";
 import { chunks } from "./utils/arrayUtils";
 import {
   KaminoMarket,

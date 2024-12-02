@@ -4,7 +4,7 @@ import Decimal from "decimal.js";
 import { WAD } from "./utils";
 import { PublicKey } from "@solana/web3.js";
 import { RewardInfo, RewardType } from "../rpc_client/types";
-import { OraclePrices } from "@hubbleprotocol/scope-sdk";
+import { OraclePrices } from "@kamino-finance/scope-sdk";
 
 export function calculatePendingRewards(
   farmState: FarmState,
