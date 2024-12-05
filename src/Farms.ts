@@ -72,7 +72,10 @@ import {
   signSendAndConfirmRawTransactionWithRetry,
   Web3Client,
 } from "./utils/sendTransactionsUtils";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { batchFetch } from "./utils/batch";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -1756,7 +1759,7 @@ export class Farms {
     decimalsOverride: number = -1,
     tokenProgramOverride: PublicKey = TOKEN_PROGRAM_ID,
     scopePricesOverride: PublicKey = PROGRAM_ID,
-  ): Promise<TransactionInstruction> {
+  ): Promise<TransactionInstruction[]> {
     let decimals = decimalsOverride;
     let tokenProgram = tokenProgramOverride;
 
@@ -1789,13 +1792,16 @@ export class Farms {
       collToLamportsDecimal(amount, decimals).floor().toString(),
     );
 
-    const payerRewardAta = await getAssociatedTokenAddress(
-      payer,
-      mint,
-      tokenProgram,
-    );
     let rewardVault = getRewardVaultPDA(this._farmsProgramId, farm, mint);
     let farmVaultsAuthority = getFarmAuthorityPDA(this._farmsProgramId, farm);
+
+    const [payerRewardAta, initAtaIdempotentIx] =
+      await createAssociatedTokenAccountIdempotentInstruction(
+        payer,
+        mint,
+        payer,
+        tokenProgram,
+      );
 
     const ix = farmOperations.withdrawReward(
       payer,
@@ -1809,7 +1815,7 @@ export class Farms {
       rewardIndex,
       amountLamports,
     );
-    return ix;
+    return [initAtaIdempotentIx, ix];
   }
 
   async addRewardAmountToFarm(

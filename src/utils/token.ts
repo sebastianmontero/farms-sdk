@@ -88,7 +88,7 @@ export async function getAssociatedTokenAddress(
   tokenMintAddress: PublicKey,
   tokenProgram: PublicKey,
 ): Promise<PublicKey> {
-  return getAta(tokenMintAddress, owner, false, tokenProgram);
+  return getAta(tokenMintAddress, owner, true, tokenProgram);
 }
 
 export async function createAssociatedTokenAccountIdempotentInstruction(

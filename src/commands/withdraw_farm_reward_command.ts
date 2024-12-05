@@ -35,7 +35,7 @@ export async function withdrawFarmRewardCommand(
     throw new Error("Farm not found");
   }
 
-  const withdrawIxn = await farmsClient.withdrawRewardAmountFromFarmIx(
+  const withdrawIxs = await farmsClient.withdrawRewardAmountFromFarmIx(
     farmState.farmAdmin,
     farmPubkey,
     rewardMintPubkey,
@@ -55,7 +55,7 @@ export async function withdrawFarmRewardCommand(
     );
     txn.add(...priorityFeeIxn);
   }
-  txn.add(withdrawIxn);
+  txn.add(...withdrawIxs);
   if (mode === "simulate") {
     await printSimulateTx(env.provider.connection, txn);
   } else if (mode === "multisig") {
