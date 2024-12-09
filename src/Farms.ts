@@ -376,6 +376,7 @@ export class Farms {
   async getLockupDurationAndExpiry(
     farm: PublicKey,
     user: PublicKey,
+    timestampNow: number,
   ): Promise<{
     lockupRemainingDuration: number;
     farmLockupOriginalDuration: number;
@@ -402,8 +403,6 @@ export class Farms {
       throw "Early withdrawal penalty is too high";
     }
     let lockingStart = 0;
-    const slot = await this._connection.getSlot();
-    const timestampNow = (await this._connection.getBlockTime(slot))!;
 
     if (lockingMode == LockingMode.None.discriminator) {
       return {
@@ -529,6 +528,7 @@ export class Farms {
 
   async getAllFarmsForUser(
     user: PublicKey,
+    timestamp: Decimal,
     strategiesToInclude?: PublicKeySet<PublicKey>,
   ): Promise<PubkeyHashMap<PublicKey, UserFarm>> {
     const userStates = await this.getAllUserStatesForUser(user);
@@ -563,10 +563,6 @@ export class Farms {
       // Return empty if no serializable farm states found
       return new PubkeyHashMap<PublicKey, UserFarm>();
     }
-
-    const timestamp = new Decimal(
-      (await this._connection.getBlockTime(await this._connection.getSlot()))!,
-    );
 
     const userFarms = new PubkeyHashMap<PublicKey, UserFarm>();
 
@@ -757,6 +753,7 @@ export class Farms {
   async getUserForUndelegatedFarm(
     user: PublicKey,
     farmAddress: PublicKey,
+    timestamp: Decimal,
   ): Promise<UserFarm> {
     const farmState = await FarmState.fetch(this._connection, farmAddress);
     if (!farmState) {
@@ -822,10 +819,6 @@ export class Farms {
     );
 
     // get oraclePrices
-    const timestamp = new Decimal(
-      (await this._connection.getBlockTime(await this._connection.getSlot()))!,
-    );
-
     let oraclePrices: OraclePrices | null = null;
     if (!farmState.scopePrices.equals(PublicKey.default)) {
       oraclePrices = await OraclePrices.fetch(
@@ -2453,12 +2446,10 @@ export class Farms {
 }
 
 export async function getCurrentTimeUnit(
-  conn: Connection,
   farm: FarmState,
+  slot: number,
+  timestamp: number,
 ): Promise<Decimal> {
-  const slot = await conn.getSlot();
-  const timestamp = await conn.getBlockTime(slot);
-
   if (farm.timeUnit == TimeUnit.Seconds.discriminator) {
     return new Decimal(timestamp!);
   } else {
@@ -2467,11 +2458,14 @@ export async function getCurrentTimeUnit(
 }
 
 export async function getCurrentRps(
-  conn: Connection,
   farm: FarmState,
   rewardIndex: number,
+  slot: number,
+  timestamp: number,
 ): Promise<number> {
-  const currentTimeUnit = new Decimal(await getCurrentTimeUnit(conn, farm));
+  const currentTimeUnit = new Decimal(
+    await getCurrentTimeUnit(farm, slot, timestamp),
+  );
   return calculateCurrentRewardPerToken(
     farm.rewardInfos[rewardIndex],
     currentTimeUnit,
