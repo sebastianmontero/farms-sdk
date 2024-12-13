@@ -2,6 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { RewardInfo } from "../rpc_client/types";
 import { PubkeyHashMap } from "@kamino-finance/klend-sdk";
+import { UserState } from "../rpc_client/accounts";
 
 export type UserFarm = {
   userStateAddress: PublicKey;
@@ -13,6 +14,7 @@ export type UserFarm = {
   pendingRewards: PendingReward[];
   delegateAuthority: PublicKey;
   strategyId: PublicKey;
+  userState: UserState;
 };
 
 export type PendingReward = {

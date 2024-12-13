@@ -36,13 +36,9 @@ import {
   scaleDownWads,
   createAddExtraComputeUnitsTransaction,
 } from "./utils";
-import { UserState, UserStateFields } from "./rpc_client/accounts";
+import { UserState } from "./rpc_client/accounts";
 import { UserFarm } from "./models";
-import {
-  FarmState,
-  FarmStateFields,
-  GlobalConfig,
-} from "./rpc_client/accounts";
+import { FarmState, GlobalConfig } from "./rpc_client/accounts";
 import * as farmOperations from "./utils/operations";
 import Decimal from "decimal.js";
 import { Keypair, VersionedTransaction } from "@solana/web3.js";
@@ -72,10 +68,7 @@ import {
   signSendAndConfirmRawTransactionWithRetry,
   Web3Client,
 } from "./utils/sendTransactionsUtils";
-import {
-  getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { batchFetch } from "./utils/batch";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -616,6 +609,7 @@ export class Farms {
           strategyId: farmState.farmState.strategyId,
           delegateAuthority: farmState.farmState.delegateAuthority,
           stakedToken: farmState.farmState.token.mint,
+          userState: userState.userState,
           activeStakeByDelegatee: new PubkeyHashMap<PublicKey, Decimal>(),
           pendingDepositStakeByDelegatee: new PubkeyHashMap<
             PublicKey,
@@ -774,6 +768,7 @@ export class Farms {
     const userFarm: UserFarm = {
       userStateAddress: userStateAddress,
       farm: farmAddress,
+      userState,
       strategyId: farmState.strategyId,
       delegateAuthority: farmState.delegateAuthority,
       stakedToken: farmState.token.mint,
