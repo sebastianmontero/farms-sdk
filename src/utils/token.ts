@@ -1,5 +1,6 @@
 import {
   createMintToInstruction,
+  getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
   unpackMint,
 } from "@solana/spl-token";
@@ -83,12 +84,17 @@ export async function getMintDecimals(
   return unpackMint(mintAddress, acc, acc.owner).decimals;
 }
 
-export async function getAssociatedTokenAddress(
+export function getAssociatedTokenAddress(
   owner: PublicKey,
   tokenMintAddress: PublicKey,
   tokenProgram: PublicKey,
-): Promise<PublicKey> {
-  return getAta(tokenMintAddress, owner, true, tokenProgram);
+): PublicKey {
+  return getAssociatedTokenAddressSync(
+    tokenMintAddress,
+    owner,
+    true,
+    tokenProgram,
+  );
 }
 
 export async function createAssociatedTokenAccountIdempotentInstruction(

@@ -904,12 +904,12 @@ export class Farms {
     return sig;
   }
 
-  async createNewUserIx(
+  createNewUserIx(
     user: PublicKey,
     farm: PublicKey,
     authority: PublicKey = user,
     delegatee: PublicKey = user,
-  ): Promise<TransactionInstruction> {
+  ): TransactionInstruction {
     const userState = getUserStatePDA(this._farmsProgramId, farm, user);
 
     const ix = farmOperations.initializeUser(
@@ -931,7 +931,7 @@ export class Farms {
     authority: Keypair = user,
     delegatee: Keypair = user,
   ): Promise<TransactionSignature> {
-    const ix = await this.createNewUserIx(
+    const ix = this.createNewUserIx(
       user.publicKey,
       farm,
       authority.publicKey,
@@ -958,20 +958,20 @@ export class Farms {
     return sig;
   }
 
-  async stakeIx(
+  stakeIx(
     user: PublicKey,
     farm: PublicKey,
     amountLamports: Decimal,
     stakeTokenMint: PublicKey,
     scopePrices: PublicKey,
-  ): Promise<TransactionInstruction> {
+  ): TransactionInstruction {
     const farmVault = getFarmVaultPDA(
       this._farmsProgramId,
       farm,
       stakeTokenMint,
     );
     const userStatePk = getUserStatePDA(this._farmsProgramId, farm, user);
-    const userTokenAta = await getAssociatedTokenAddress(
+    const userTokenAta = getAssociatedTokenAddress(
       user,
       stakeTokenMint,
       TOKEN_PROGRAM_ID,
@@ -998,7 +998,7 @@ export class Farms {
     priorityFeeMultiplier: number,
     web3Client?: Web3Client,
   ): Promise<TransactionSignature> {
-    const ix = await this.stakeIx(
+    const ix = this.stakeIx(
       user.publicKey,
       farm,
       amountLamports,
@@ -1027,12 +1027,12 @@ export class Farms {
     return sig;
   }
 
-  async unstakeIx(
+  unstakeIx(
     user: PublicKey,
     farm: PublicKey,
     amountLamports: string,
     scopePrices: PublicKey,
-  ): Promise<TransactionInstruction> {
+  ): TransactionInstruction {
     const userStatePk = getUserStatePDA(this._farmsProgramId, farm, user);
 
     const ix = farmOperations.unstake(
@@ -1052,12 +1052,7 @@ export class Farms {
     priorityFeeMultiplier: number,
     web3Client?: Web3Client,
   ): Promise<TransactionSignature> {
-    const ix = await this.unstakeIx(
-      user.publicKey,
-      farm,
-      sharesAmount,
-      PROGRAM_ID,
-    );
+    const ix = this.unstakeIx(user.publicKey, farm, sharesAmount, PROGRAM_ID);
 
     let sig = await this.executeTransaction(
       [ix],
@@ -1075,13 +1070,13 @@ export class Farms {
     return sig;
   }
 
-  async withdrawUnstakedDepositIx(
+  withdrawUnstakedDepositIx(
     user: PublicKey,
     userState: PublicKey,
     farmState: PublicKey,
     stakeTokenMint: PublicKey,
-  ): Promise<TransactionInstruction> {
-    const userTokenAta = await getAssociatedTokenAddress(
+  ): TransactionInstruction {
+    const userTokenAta = getAssociatedTokenAddress(
       user,
       stakeTokenMint,
       TOKEN_PROGRAM_ID,
@@ -1116,7 +1111,7 @@ export class Farms {
     priorityFeeMultiplier: number,
     web3Client?: Web3Client,
   ): Promise<TransactionSignature> {
-    const ix = await this.withdrawUnstakedDepositIx(
+    const ix = this.withdrawUnstakedDepositIx(
       user.publicKey,
       userState,
       farmState,
@@ -1174,7 +1169,7 @@ export class Farms {
 
     const rewardsTokenProgram =
       farmState.rewardInfos[rewardIndex].token.tokenProgram;
-    const userRewardAta = await getAssociatedTokenAddress(
+    const userRewardAta = getAssociatedTokenAddress(
       user,
       rewardMint,
       rewardsTokenProgram,
@@ -1374,11 +1369,11 @@ export class Farms {
     return sigs;
   }
 
-  async transferOwnershipIx(
+  transferOwnershipIx(
     user: PublicKey,
     userState: PublicKey,
     newUser: PublicKey,
-  ): Promise<TransactionInstruction> {
+  ): TransactionInstruction {
     const ix = farmOperations.transferOwnership(user, userState, newUser);
 
     return ix;
@@ -1391,11 +1386,7 @@ export class Farms {
     priorityFeeMultiplier: number,
     web3Client?: Web3Client,
   ): Promise<TransactionSignature> {
-    const ix = await this.transferOwnershipIx(
-      user.publicKey,
-      userState,
-      newUser,
-    );
+    const ix = this.transferOwnershipIx(user.publicKey, userState, newUser);
 
     let sig = await this.executeTransaction(
       [ix],
