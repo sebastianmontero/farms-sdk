@@ -1,4 +1,9 @@
-import { Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   collToLamportsDecimal,
@@ -403,7 +408,7 @@ export async function createFarmAccountsWithAirdrops(
 }
 
 export async function createFarmAccounts(
-  env: Env,
+  farmsProgramId: PublicKey,
   rewardTokens: Array<PublicKey>,
   tokenMint: PublicKey,
   farmAdmin: Keypair,
@@ -411,12 +416,12 @@ export async function createFarmAccounts(
   const farmState: Keypair = Keypair.generate();
 
   const farmVault = getFarmVaultPDA(
-    env.programId,
+    farmsProgramId,
     farmState.publicKey,
     tokenMint,
   );
   const farmVaultAuthority = getFarmAuthorityPDA(
-    env.programId,
+    farmsProgramId,
     farmState.publicKey,
   );
 
@@ -517,7 +522,7 @@ export async function setUpFarm(
 ): Promise<FarmAccounts> {
   let rewardTokens = new Array<PublicKey>();
   const farmAccounts = await createFarmAccounts(
-    env,
+    env.programId,
     rewardTokens,
     tokenMint,
     farmAdmin,
@@ -568,26 +573,28 @@ export async function setUpFarmDelegated(
 }
 
 export async function setUpFarmIx(
-  env: Env,
+  connection: Connection,
+  farmsProgramId: PublicKey,
   globalConfig: PublicKey,
   tokenMint: PublicKey,
   farmAdmin: Keypair,
   mode: string,
+  multisig?: PublicKey,
 ): Promise<[TransactionInstruction[], FarmAccounts]> {
   let rewardTokens = new Array<PublicKey>();
   const farmAccounts = await createFarmAccounts(
-    env,
+    farmsProgramId,
     rewardTokens,
     tokenMint,
     farmAdmin,
   );
 
-  const farmClient = new Farms(env.provider.connection);
+  const farmClient = new Farms(connection);
 
   return [
     await farmClient.createFarmIx(
       mode === "multisig"
-        ? new PublicKey(process.env.MULTISIG!)
+        ? new PublicKey(multisig!)
         : farmAccounts.farmAdmin.publicKey,
       farmAccounts.farmState,
       globalConfig,
