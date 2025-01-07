@@ -26,7 +26,8 @@ export type FarmConfigOptionKind =
   | FarmConfigOption.UpdateRewardScheduleCurvePoints
   | FarmConfigOption.UpdatePendingFarmAdmin
   | FarmConfigOption.UpdateStrategyId
-  | FarmConfigOption.UpdateDelegatedRpsAdmin;
+  | FarmConfigOption.UpdateDelegatedRpsAdmin
+  | FarmConfigOption.UpdateVaultId;
 export type FarmConfigOptionJSON =
   | FarmConfigOption.UpdateRewardRpsJSON
   | FarmConfigOption.UpdateRewardMinClaimDurationJSON
@@ -47,7 +48,8 @@ export type FarmConfigOptionJSON =
   | FarmConfigOption.UpdateRewardScheduleCurvePointsJSON
   | FarmConfigOption.UpdatePendingFarmAdminJSON
   | FarmConfigOption.UpdateStrategyIdJSON
-  | FarmConfigOption.UpdateDelegatedRpsAdminJSON;
+  | FarmConfigOption.UpdateDelegatedRpsAdminJSON
+  | FarmConfigOption.UpdateVaultIdJSON;
 
 export { GlobalConfigOption };
 

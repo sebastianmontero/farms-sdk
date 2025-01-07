@@ -78,6 +78,7 @@ export interface FarmStateFields {
   pendingFarmAdmin: PublicKey;
   strategyId: PublicKey;
   delegatedRpsAdmin: PublicKey;
+  vaultId: PublicKey;
   padding: Array<BN>;
 }
 
@@ -155,6 +156,7 @@ export interface FarmStateJSON {
   pendingFarmAdmin: string;
   strategyId: string;
   delegatedRpsAdmin: string;
+  vaultId: string;
   padding: Array<string>;
 }
 
@@ -232,6 +234,7 @@ export class FarmState {
   readonly pendingFarmAdmin: PublicKey;
   readonly strategyId: PublicKey;
   readonly delegatedRpsAdmin: PublicKey;
+  readonly vaultId: PublicKey;
   readonly padding: Array<BN>;
 
   static readonly discriminator = Buffer.from([
@@ -274,7 +277,8 @@ export class FarmState {
     borsh.publicKey("pendingFarmAdmin"),
     borsh.publicKey("strategyId"),
     borsh.publicKey("delegatedRpsAdmin"),
-    borsh.array(borsh.u64(), 82, "padding"),
+    borsh.publicKey("vaultId"),
+    borsh.array(borsh.u64(), 78, "padding"),
   ]);
 
   constructor(fields: FarmStateFields) {
@@ -316,6 +320,7 @@ export class FarmState {
     this.pendingFarmAdmin = fields.pendingFarmAdmin;
     this.strategyId = fields.strategyId;
     this.delegatedRpsAdmin = fields.delegatedRpsAdmin;
+    this.vaultId = fields.vaultId;
     this.padding = fields.padding;
   }
 
@@ -402,6 +407,7 @@ export class FarmState {
       pendingFarmAdmin: dec.pendingFarmAdmin,
       strategyId: dec.strategyId,
       delegatedRpsAdmin: dec.delegatedRpsAdmin,
+      vaultId: dec.vaultId,
       padding: dec.padding,
     });
   }
@@ -444,6 +450,7 @@ export class FarmState {
       pendingFarmAdmin: this.pendingFarmAdmin.toString(),
       strategyId: this.strategyId.toString(),
       delegatedRpsAdmin: this.delegatedRpsAdmin.toString(),
+      vaultId: this.vaultId.toString(),
       padding: this.padding.map((item) => item.toString()),
     };
   }
@@ -489,6 +496,7 @@ export class FarmState {
       pendingFarmAdmin: new PublicKey(obj.pendingFarmAdmin),
       strategyId: new PublicKey(obj.strategyId),
       delegatedRpsAdmin: new PublicKey(obj.delegatedRpsAdmin),
+      vaultId: new PublicKey(obj.vaultId),
       padding: obj.padding.map((item) => new BN(item)),
     });
   }

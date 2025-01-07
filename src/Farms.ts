@@ -523,6 +523,7 @@ export class Farms {
     user: PublicKey,
     timestamp: Decimal,
     strategiesToInclude?: PublicKeySet<PublicKey>,
+    vaultsToInclude?: PublicKeySet<PublicKey>,
   ): Promise<PubkeyHashMap<PublicKey, UserFarm>> {
     const userStates = await this.getAllUserStatesForUser(user);
 
@@ -550,6 +551,15 @@ export class Farms {
       });
     } else {
       farmStatesFiltered = farmStates;
+    }
+
+    if (vaultsToInclude) {
+      farmStatesFiltered = farmStatesFiltered.filter((farmStates) => {
+        if (vaultsToInclude.contains(farmStates.farmState.vaultId)) {
+          return true;
+        }
+        return false;
+      });
     }
 
     if (farmStatesFiltered.length === 0) {
@@ -742,6 +752,19 @@ export class Farms {
       key: userStateAddress,
       userState: userState,
     };
+  }
+
+  async getUserTokensInUndelegatedFarm(
+    user: PublicKey,
+    farm: PublicKey,
+    tokenDecimals: number,
+  ): Promise<Decimal> {
+    const userState = await this.getUserStateKeyForUndelegatedFarm(user, farm);
+
+    return lamportsToCollDecimal(
+      new Decimal(scaleDownWads(userState.userState.activeStakeScaled)),
+      tokenDecimals,
+    );
   }
 
   async getUserForUndelegatedFarm(

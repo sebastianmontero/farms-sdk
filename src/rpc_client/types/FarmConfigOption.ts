@@ -463,6 +463,29 @@ export class UpdateDelegatedRpsAdmin {
   }
 }
 
+export interface UpdateVaultIdJSON {
+  kind: "UpdateVaultId";
+}
+
+export class UpdateVaultId {
+  static readonly discriminator = 20;
+  static readonly kind = "UpdateVaultId";
+  readonly discriminator = 20;
+  readonly kind = "UpdateVaultId";
+
+  toJSON(): UpdateVaultIdJSON {
+    return {
+      kind: "UpdateVaultId",
+    };
+  }
+
+  toEncodable() {
+    return {
+      UpdateVaultId: {},
+    };
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function fromDecoded(obj: any): types.FarmConfigOptionKind {
   if (typeof obj !== "object") {
@@ -528,6 +551,9 @@ export function fromDecoded(obj: any): types.FarmConfigOptionKind {
   }
   if ("UpdateDelegatedRpsAdmin" in obj) {
     return new UpdateDelegatedRpsAdmin();
+  }
+  if ("UpdateVaultId" in obj) {
+    return new UpdateVaultId();
   }
 
   throw new Error("Invalid enum object");
@@ -597,6 +623,9 @@ export function fromJSON(
     case "UpdateDelegatedRpsAdmin": {
       return new UpdateDelegatedRpsAdmin();
     }
+    case "UpdateVaultId": {
+      return new UpdateVaultId();
+    }
   }
 }
 
@@ -622,6 +651,7 @@ export function layout(property?: string) {
     borsh.struct([], "UpdatePendingFarmAdmin"),
     borsh.struct([], "UpdateStrategyId"),
     borsh.struct([], "UpdateDelegatedRpsAdmin"),
+    borsh.struct([], "UpdateVaultId"),
   ]);
   if (property !== undefined) {
     return ret.replicate(property);

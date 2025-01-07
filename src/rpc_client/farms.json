@@ -1158,11 +1158,15 @@
             "type": "publicKey"
           },
           {
+            "name": "vaultId",
+            "type": "publicKey"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u64",
-                82
+                78
               ]
             }
           }
@@ -1431,6 +1435,9 @@
           },
           {
             "name": "UpdateDelegatedRpsAdmin"
+          },
+          {
+            "name": "UpdateVaultId"
           }
         ]
       }
