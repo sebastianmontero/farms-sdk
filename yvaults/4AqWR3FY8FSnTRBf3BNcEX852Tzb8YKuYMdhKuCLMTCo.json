@@ -1,0 +1,41 @@
+{
+  "farmMetadata": {
+    "type": "strategy",
+    "strategy": "4AqWR3FY8FSnTRBf3BNcEX852Tzb8YKuYMdhKuCLMTCo"
+  },
+  "farmPubkey": "BfDp71YpExxr7yhVrfrghuNDctuWZtSkfZWio9B7NTD4",
+  "stakingTokenMint": "9Xknk9HXw3igVMcCpPe94UykFxq9VBEeBTc4uSbdiNHg",
+  "withdrawAuthority": "11111111111111111111111111111111",
+  "globalConfig": "6UodrBjL2ZreDy7QdR4YV1oxqMBjVYSEyrFpctqqwGwL",
+  "strategyId": "4AqWR3FY8FSnTRBf3BNcEX852Tzb8YKuYMdhKuCLMTCo",
+  "depositCapAmount": 0,
+  "rewards": [
+    {
+      "rewardTokenMint": "Dz8VutERqbHR2aFL5A3s1Ky4dG1unJT1jUFXXPaY9ytX",
+      "rewardType": "Proportional",
+      "rewardPerSecondDecimals": 0,
+      "minClaimDurationSeconds": 0,
+      "rewardCurve": [
+        {
+          "startTs": 0,
+          "rps": 13067503
+        }
+      ],
+      "rewardAvailable": 22772,
+      "rewardToTopUp": 0,
+      "rewardToTopUpDurationDays": 0
+    }
+  ],
+  "pendingFarmAdmin": "BbM3mbcLsa3QcYEVx8iovwfKaA1iZ6DK5fEbbtHwS3N8",
+  "scopePrices": "11111111111111111111111111111111",
+  "scopePriceOracleId": "18446744073709551615",
+  "scopeOracleMaxAge": 0,
+  "lockingMode": 0,
+  "lockingStart": 0,
+  "lockingDuration": 0,
+  "lockingEarlyWithdrawalPenaltyBps": 0,
+  "depositWarmupPeriod": 0,
+  "withdrawCooldownPeriod": 0,
+  "slashedAmountSpillAddress": "11111111111111111111111111111111",
+  "delegatedRpsAdmin": "11111111111111111111111111111111"
+}

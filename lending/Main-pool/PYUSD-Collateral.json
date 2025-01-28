@@ -1,0 +1,94 @@
+{
+  "farmMetadata": {
+    "type": "reserve",
+    "reserve": "2gc9Dm1eB6UgVYFBUN9bWks6Kes9PbWSaPaa9DqyvEiN",
+    "market": "7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF"
+  },
+  "farmPubkey": "DEe2NZ5dAXGxC7M8Gs9Esd9wZRPdQzG8jNamXqhL5yku",
+  "stakingTokenMint": "11111111111111111111111111111111",
+  "withdrawAuthority": "11111111111111111111111111111111",
+  "globalConfig": "6UodrBjL2ZreDy7QdR4YV1oxqMBjVYSEyrFpctqqwGwL",
+  "strategyId": "11111111111111111111111111111111",
+  "depositCapAmount": 0,
+  "rewards": [
+    {
+      "rewardTokenMint": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+      "rewardType": "Proportional",
+      "rewardPerSecondDecimals": 0,
+      "minClaimDurationSeconds": 0,
+      "rewardCurve": [
+        {
+          "startTs": 1724157330,
+          "rps": 1984127
+        },
+        {
+          "startTs": 1724845250,
+          "rps": 1488095
+        },
+        {
+          "startTs": 1725105870,
+          "rps": 1322751
+        },
+        {
+          "startTs": 1725264017,
+          "rps": 1157407
+        },
+        {
+          "startTs": 1725437406,
+          "rps": 992063
+        },
+        {
+          "startTs": 1725612043,
+          "rps": 826720
+        },
+        {
+          "startTs": 1725956462,
+          "rps": 661376
+        },
+        {
+          "startTs": 1726141693,
+          "rps": 496032
+        },
+        {
+          "startTs": 1726326924,
+          "rps": 413360
+        },
+        {
+          "startTs": 1728987605,
+          "rps": 372024
+        },
+        {
+          "startTs": 1730479362,
+          "rps": 289352
+        },
+        {
+          "startTs": 1730804482,
+          "rps": 165344
+        },
+        {
+          "startTs": 1731068393,
+          "rps": 82672
+        },
+        {
+          "startTs": 1731924071,
+          "rps": 41336
+        }
+      ],
+      "rewardAvailable": 0,
+      "rewardToTopUp": 0,
+      "rewardToTopUpDurationDays": 0
+    }
+  ],
+  "pendingFarmAdmin": "BbM3mbcLsa3QcYEVx8iovwfKaA1iZ6DK5fEbbtHwS3N8",
+  "scopePrices": "11111111111111111111111111111111",
+  "scopePriceOracleId": "18446744073709551615",
+  "scopeOracleMaxAge": 0,
+  "lockingMode": 0,
+  "lockingStart": 0,
+  "lockingDuration": 0,
+  "lockingEarlyWithdrawalPenaltyBps": 0,
+  "depositWarmupPeriod": 0,
+  "withdrawCooldownPeriod": 0,
+  "slashedAmountSpillAddress": "11111111111111111111111111111111",
+  "delegatedRpsAdmin": "11111111111111111111111111111111"
+}

@@ -1,0 +1,24 @@
+{
+  "farmMetadata": {
+    "type": "standalone"
+  },
+  "farmPubkey": "14JxPPVZExLoHAVgRTXjZZx5w882iDe1fjjZEDZDfHnT",
+  "stakingTokenMint": "7b583fdvZxLekrb9UziSXarpxrdF3nojU1ad4SEC2PzL",
+  "withdrawAuthority": "11111111111111111111111111111111",
+  "globalConfig": "6UodrBjL2ZreDy7QdR4YV1oxqMBjVYSEyrFpctqqwGwL",
+  "strategyId": "11111111111111111111111111111111",
+  "depositCapAmount": 0,
+  "rewards": [],
+  "pendingFarmAdmin": "49P1gTEo7gRoTtPs5gPQrF5mxA8XdNdvbQJF5DB1fAmX",
+  "scopePrices": "11111111111111111111111111111111",
+  "scopePriceOracleId": "18446744073709551615",
+  "scopeOracleMaxAge": 0,
+  "lockingMode": 0,
+  "lockingStart": 0,
+  "lockingDuration": 0,
+  "lockingEarlyWithdrawalPenaltyBps": 0,
+  "depositWarmupPeriod": 0,
+  "withdrawCooldownPeriod": 0,
+  "slashedAmountSpillAddress": "11111111111111111111111111111111",
+  "delegatedRpsAdmin": "11111111111111111111111111111111"
+}
