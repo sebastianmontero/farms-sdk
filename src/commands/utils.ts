@@ -16,6 +16,7 @@ export function createAddExtraComputeUnitFeeTransaction(
 }
 
 export function initializeClient(
+  rpc: string,
   cluster: string,
   admin: string,
   programId: PublicKey,
@@ -38,6 +39,7 @@ export function initializeClient(
 
   // Get connection first
   const env: Env = setUpProgram({
+    rpc,
     adminFilePath: admin,
     clusterOverride: cluster,
     programOverride: programId,

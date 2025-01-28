@@ -70,6 +70,7 @@ export type FarmInfo = {
 };
 
 export function setUpProgram(args: {
+  rpc: string;
   clusterOverride?: string;
   adminFilePath?: string;
   programOverride?: PublicKey;
@@ -89,20 +90,20 @@ export function setUpProgram(args: {
   if (cluster === "localnet") {
     chain = {
       name: "localnet",
-      endpoint: "http://127.0.0.1:8899",
+      endpoint: args.rpc,
       chainID: LOCALNET_CHAIN_ID,
       displayName: "Localnet",
     };
   } else {
     chain = {
       name: "mainnet-beta",
-      endpoint: cluster,
-      wsEndpoint: cluster?.replace("https:", "wss:") + "/whirligig",
+      endpoint: args.rpc,
+      // wsEndpoint: cluster?.replace("https:", "wss:") + "/whirligig",
       chainID: MAINNET_BETA_CHAIN_ID,
       displayName: "Mainnet Beta (Triton)",
     };
   }
-
+  console.log("Chain", chain);
   const client = new Web3Client(chain);
   const connection = client.sendConnection;
 

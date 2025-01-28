@@ -57,7 +57,7 @@ export class Web3Client {
       confirmTransactionInitialTimeout: 120 * 1000,
     });
 
-    if (chain.name !== "localnet") {
+    if (chain.name !== "localnet" && process.env.IRONFORGE_CLUSTER) {
       this._sendConnectionsExtra = [
         new Connection(process.env.IRONFORGE_CLUSTER!, {
           commitment: "confirmed",

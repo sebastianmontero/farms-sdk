@@ -3,10 +3,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Command } from "commander";
 import Decimal from "decimal.js";
-import dotenv from "dotenv";
-dotenv.config({
-  path: `../.env${process.env.ENV ? "." + process.env.ENV : ""}`,
-});
+import 'dotenv/config'
 
 import { collToLamportsDecimal } from "./utils/utils";
 import { PublicKey } from "@solana/web3.js";

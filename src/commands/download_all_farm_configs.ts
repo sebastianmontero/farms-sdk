@@ -17,10 +17,13 @@ import { Kamino } from "@kamino-finance/kliquidity-sdk";
 export async function downloadAllFarmConfigs(targetPath: string) {
   const admin = process.env.ADMIN!;
   const rpc = process.env.RPC!;
+  const cluster = process.env.CLUSTER!;
+  console.log(`Klend program id: ${process.env.KLEND_PROGRAM_ID}`);
   const klendProgramId = new PublicKey(process.env.KLEND_PROGRAM_ID!);
+  const kfarmProgramId = new PublicKey(process.env.KFARM_PROGRAM_ID!);
   const lendingMarkets = await getMarketsFromApiData(klendProgramId);
 
-  const env = initializeClient(rpc, admin, getFarmsProgramId(rpc), false);
+  const env = initializeClient(rpc, cluster, admin, kfarmProgramId, false);
 
   const farmClient = new Farms(env.provider.connection);
 
